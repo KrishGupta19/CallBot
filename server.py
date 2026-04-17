@@ -2,6 +2,7 @@ import os
 import sys
 import json
 import asyncio
+from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -44,7 +45,37 @@ async def get_calls():
         try:
             call_data = json.loads(filepath.read_text(encoding="utf-8"))
             if isinstance(call_data, list):
-                calls.append({"filename": filepath.name, "transcript": call_data})
+                # Legacy format: transcript-only list (sometimes empty). Inject call_start
+                # from file modified time so the dashboard can show date/time.
+                mtime = datetime.fromtimestamp(filepath.stat().st_mtime).isoformat()
+                calls.append(
+                    {
+                        "filename": filepath.name,
+                        "call_start": mtime,
+                        "call_end": None,
+                        "duration_seconds": None,
+                        "caller_number": None,
+                        "transcript": call_data,
+                        "transcript_text": " ".join(
+                            [
+                                (t.get("text") or "").strip()
+                                for t in call_data
+                                if isinstance(t, dict)
+                            ]
+                        ).strip(),
+                        "summary": {
+                            "caller_name": None,
+                            "interest": None,
+                            "budget_range": None,
+                            "timeline": None,
+                            "source": None,
+                            "lead_score": None,
+                            "sentiment": None,
+                            "summary": None,
+                            "follow_up_action": None,
+                        },
+                    }
+                )
             else:
                 call_data["filename"] = filepath.name
                 calls.append(call_data)
@@ -107,6 +138,7 @@ async def websocket_endpoint(websocket: WebSocket):
     # Read messages from Twilio until we get the 'start' event with stream_sid
     stream_sid = None
     call_sid = None
+    caller_number = None
     try:
         async for message in websocket.iter_text():
             data = json.loads(message)
@@ -117,6 +149,8 @@ async def websocket_endpoint(websocket: WebSocket):
             elif event == "start":
                 stream_sid = data["start"]["streamSid"]
                 call_sid = data["start"].get("callSid")
+                custom = data["start"].get("customParameters") or {}
+                caller_number = custom.get("caller_number") or custom.get("From") or None
                 logger.info(f"Stream started: stream_sid={stream_sid}, call_sid={call_sid}")
                 break
     except Exception as e:
@@ -131,7 +165,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         from bot import run_bot
-        await run_bot(websocket, stream_sid, call_sid)
+        await run_bot(websocket, stream_sid, call_sid, caller_number)
     except asyncio.CancelledError:
         logger.info("Call cancelled (caller hung up)")
     except ConnectionError as e:

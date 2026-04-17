@@ -6,125 +6,1024 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Voice Agent Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Tailwind CDN doesn't ship line-clamp by default */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            width: 0px;
+            height: 0px;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        :root {
+            --sidebar-w: 380px;
+        }
+    </style>
 </head>
 
-<body class="bg-gray-100 h-screen flex overflow-hidden font-sans">
+<body class="bg-slate-100 h-screen overflow-hidden font-sans">
 
-    <!-- Sidebar / Call List -->
-    <div class="w-1/3 md:w-1/4 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-10">
-        <div class="p-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-            <h1 class="text-xl font-bold text-gray-800">Call Logs</h1>
-            <button onclick="loadCalls()"
-                class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md shadow hover:bg-blue-700 transition">
-                Refresh
-            </button>
-        </div>
-        <div id="call-list" class="flex-1 overflow-y-auto p-3 space-y-2">
-            <p class="text-gray-500 text-center mt-4">Loading calls...</p>
-        </div>
+    <div class="h-full flex overflow-hidden">
+        <!-- Sidebar / Call List -->
+        <aside id="sidebar"
+            class="h-full bg-white border-r border-slate-200 flex flex-col shadow-sm z-20 shrink-0"
+            style="width: var(--sidebar-w);">
+            <div class="p-4 border-b border-slate-200 bg-white/80 backdrop-blur">
+                <div class="flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-2">
+                        <div class="h-9 w-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                            <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
+                                <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h1 class="text-base font-bold text-slate-900 leading-tight">Call Dashboard</h1>
+                            <div class="text-xs text-slate-500" id="sidebar-subtitle">Loading…</div>
+                        </div>
+                    </div>
+                    <button id="btn-refresh"
+                        class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 active:bg-slate-900">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+                            <path
+                                d="M20 12a8 8 0 10-2.34 5.66M20 12v6m0-6h-6"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
+                        </svg>
+                        Refresh
+                    </button>
+                </div>
+
+                <div class="mt-3 flex items-center gap-2">
+                    <div class="relative flex-1">
+                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
+                                <path
+                                    d="M11 19a8 8 0 100-16 8 8 0 000 16z"
+                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
+                                <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"
+                                    stroke-linecap="round" stroke-linejoin="round" />
+                            </svg>
+                        </div>
+                        <input id="search"
+                            class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-300"
+                            placeholder="Search calls, summaries, transcript…" />
+                    </div>
+                    <button id="btn-filters"
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        Filters
+                    </button>
+                </div>
+
+                <div class="mt-3 flex items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 select-none">
+                            <input id="auto-refresh" type="checkbox"
+                                class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/20" />
+                            Auto-refresh
+                        </label>
+                        <select id="auto-refresh-interval"
+                            class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/15">
+                            <option value="10000">10s</option>
+                            <option value="30000" selected>30s</option>
+                            <option value="60000">60s</option>
+                        </select>
+                        <span id="new-calls-pill"
+                            class="hidden rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-xs font-semibold border border-emerald-200">
+                            New calls
+                        </span>
+                    </div>
+                    <select id="sort"
+                        class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/15">
+                        <option value="newest" selected>Newest</option>
+                        <option value="oldest">Oldest</option>
+                        <option value="lead_score_desc">Lead score ↓</option>
+                        <option value="lead_score_asc">Lead score ↑</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="call-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50">
+                <!-- filled by JS -->
+            </div>
+
+            <div class="p-3 border-t border-slate-200 bg-white flex items-center justify-between gap-2">
+                <button id="btn-export-csv"
+                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
+                    Export CSV
+                </button>
+                <button id="btn-export-json"
+                    class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    disabled>
+                    Export call JSON
+                </button>
+            </div>
+        </aside>
+
+        <!-- Resize handle -->
+        <div id="sidebar-resizer" class="w-1 bg-slate-200 hover:bg-slate-300 cursor-col-resize"></div>
+
+        <!-- Main -->
+        <main class="flex-1 flex flex-col h-full overflow-hidden">
+            <div class="p-4 border-b border-slate-200 bg-white/80 backdrop-blur z-10">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-900" id="detail-title">Select a call</h2>
+                        <div class="text-sm text-slate-500" id="detail-date"></div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-copy-summary"
+                            class="hidden rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                            Copy summary
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Analytics -->
+                <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3" id="analytics">
+                    <!-- filled by JS -->
+                </div>
+
+                <!-- Tabs -->
+                <div class="mt-4 flex items-center gap-2">
+                    <button data-tab="summary" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-slate-900 text-white">Summary</button>
+                    <button data-tab="transcript" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Transcript</button>
+                    <button data-tab="raw" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Raw JSON</button>
+                    <button data-tab="audio" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Audio</button>
+                </div>
+            </div>
+
+            <div id="call-detail" class="flex-1 overflow-y-auto p-5 lg:p-8 bg-slate-50">
+                <!-- filled by JS -->
+            </div>
+        </main>
     </div>
 
-    <!-- Detail View -->
-    <div class="flex-1 flex flex-col h-full bg-slate-50 relative">
-        <div class="p-5 border-b border-gray-200 bg-white shadow-sm flex justify-between items-center z-10">
-            <h2 class="text-lg font-bold text-gray-800" id="detail-title">Select a call from the menu</h2>
-            <span id="detail-date" class="text-sm text-gray-500 font-medium"></span>
-        </div>
+    <!-- Filters modal -->
+    <div id="filters-modal" class="hidden fixed inset-0 z-50">
+        <div class="absolute inset-0 bg-slate-900/40"></div>
+        <div class="absolute inset-0 flex items-end sm:items-center justify-center p-4">
+            <div class="w-full max-w-xl rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+                    <div>
+                        <div class="text-base font-bold text-slate-900">Filters</div>
+                        <div class="text-xs text-slate-500">Applied client-side. No backend changes.</div>
+                    </div>
+                    <button id="btn-close-filters"
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        Close
+                    </button>
+                </div>
+                <div class="p-4 space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">From date</label>
+                            <input id="filter-date-from" type="date"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">To date</label>
+                            <input id="filter-date-to" type="date"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
+                        </div>
+                    </div>
 
-        <div id="call-detail" class="flex-1 overflow-y-auto p-6 lg:p-10">
-            <div class="h-full flex items-center justify-center text-gray-400 text-lg">
-                Click on a call to view its transcript and AI summary.
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Lead score min</label>
+                            <input id="filter-lead-min" type="number" min="0" max="10" step="1" placeholder="e.g. 5"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-slate-700 mb-1">Lead score max</label>
+                            <input id="filter-lead-max" type="number" min="0" max="10" step="1" placeholder="e.g. 9"
+                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-2">Sentiment</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
+                                <input class="sentiment" type="checkbox" value="positive" />
+                                Positive
+                            </label>
+                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
+                                <input class="sentiment" type="checkbox" value="neutral" />
+                                Neutral
+                            </label>
+                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
+                                <input class="sentiment" type="checkbox" value="negative" />
+                                Negative
+                            </label>
+                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
+                                <input class="sentiment" type="checkbox" value="unknown" />
+                                Unknown
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+                    <button id="btn-clear-filters"
+                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                        Clear
+                    </button>
+                    <button id="btn-apply-filters"
+                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
+                        Apply
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        let allCalls = [];
+        const els = {
+            sidebarSubtitle: document.getElementById('sidebar-subtitle'),
+            callList: document.getElementById('call-list'),
+            detailTitle: document.getElementById('detail-title'),
+            detailDate: document.getElementById('detail-date'),
+            callDetail: document.getElementById('call-detail'),
+            analytics: document.getElementById('analytics'),
+            search: document.getElementById('search'),
+            sort: document.getElementById('sort'),
+            btnRefresh: document.getElementById('btn-refresh'),
+            btnFilters: document.getElementById('btn-filters'),
+            btnExportCsv: document.getElementById('btn-export-csv'),
+            btnExportJson: document.getElementById('btn-export-json'),
+            btnCopySummary: document.getElementById('btn-copy-summary'),
+            autoRefresh: document.getElementById('auto-refresh'),
+            autoRefreshInterval: document.getElementById('auto-refresh-interval'),
+            newCallsPill: document.getElementById('new-calls-pill'),
+            filtersModal: document.getElementById('filters-modal'),
+            btnCloseFilters: document.getElementById('btn-close-filters'),
+            btnApplyFilters: document.getElementById('btn-apply-filters'),
+            btnClearFilters: document.getElementById('btn-clear-filters'),
+            filterDateFrom: document.getElementById('filter-date-from'),
+            filterDateTo: document.getElementById('filter-date-to'),
+            filterLeadMin: document.getElementById('filter-lead-min'),
+            filterLeadMax: document.getElementById('filter-lead-max'),
+            sidebarResizer: document.getElementById('sidebar-resizer'),
+        };
 
-        async function loadCalls() {
-            document.getElementById('call-list').innerHTML = '<p class="text-gray-500 text-center mt-4">Fetching logs...</p>';
-            try {
-                const response = await fetch('/calls');
-                const data = await response.json();
-                allCalls = data.calls || [];
-                renderCallList();
-            } catch (err) {
-                document.getElementById('call-list').innerHTML = '<p class="text-red-500 text-center mt-4">Error loading calls.</p>';
+        const state = {
+            allCalls: [],
+            visibleCalls: [],
+            selectedFilename: null,
+            selectedTab: "summary",
+            loading: false,
+            error: null,
+            lastFetchAt: null,
+            newFilenames: new Set(),
+            searchQuery: "",
+            sortBy: "newest",
+            filters: {
+                dateFrom: null, // yyyy-mm-dd
+                dateTo: null,   // yyyy-mm-dd
+                leadMin: null,
+                leadMax: null,
+                sentiments: new Set(), // lowercased values
+            },
+            autoRefresh: {
+                enabled: false,
+                intervalMs: 30000,
+                timer: null,
+                inFlight: false,
+            },
+        };
+
+        function escapeHtml(s) {
+            return String(s ?? "")
+                .replaceAll("&", "&amp;")
+                .replaceAll("<", "&lt;")
+                .replaceAll(">", "&gt;")
+                .replaceAll('"', "&quot;")
+                .replaceAll("'", "&#39;");
+        }
+
+        function safeNumber(n) {
+            const x = Number(n);
+            return Number.isFinite(x) ? x : null;
+        }
+
+        function parseCallStart(call) {
+            if (!call || !call.call_start) return null;
+            const d = new Date(call.call_start);
+            return Number.isNaN(d.getTime()) ? null : d;
+        }
+
+        function getTranscriptArray(call) {
+            if (!call) return [];
+            if (Array.isArray(call.transcript)) return call.transcript;
+            if (Array.isArray(call)) return call;
+            return [];
+        }
+
+        function normalizeCall(raw) {
+            const filename = raw?.filename ?? "unknown";
+            const callStart = parseCallStart(raw);
+            const caller = raw?.caller_number ?? null;
+
+            const summary = raw?.summary && typeof raw.summary === "object" ? raw.summary : null;
+            const leadScore = summary ? safeNumber(summary.lead_score) : null;
+            const sentiment = (summary?.sentiment ?? "unknown").toString().trim().toLowerCase() || "unknown";
+
+            const transcript = getTranscriptArray(raw);
+            const transcriptText = transcript
+                .map(t => (t && typeof t === "object" ? (t.text ?? "") : ""))
+                .join(" ")
+                .trim();
+
+            const title = caller ? caller : String(filename).replace(/\.json$/i, "");
+            const dateText = callStart ? callStart.toLocaleString() : "Unknown date";
+
+            const searchHaystack = [
+                title,
+                filename,
+                dateText,
+                summary?.summary ?? "",
+                summary?.follow_up_action ?? "",
+                sentiment,
+                transcriptText,
+            ].join("\n").toLowerCase();
+
+            return {
+                raw,
+                filename,
+                title,
+                caller_number: caller,
+                call_start: callStart,
+                dateText,
+                summary,
+                leadScore,
+                sentiment,
+                transcript,
+                transcriptText,
+                searchHaystack,
+            };
+        }
+
+        function applyFiltersAndSort(calls, ui) {
+            const q = ui.searchQuery.trim().toLowerCase();
+            const sentiments = ui.filters.sentiments;
+            const dateFrom = ui.filters.dateFrom ? new Date(ui.filters.dateFrom + "T00:00:00") : null;
+            const dateTo = ui.filters.dateTo ? new Date(ui.filters.dateTo + "T23:59:59") : null;
+            const leadMin = ui.filters.leadMin;
+            const leadMax = ui.filters.leadMax;
+
+            let out = calls.filter(c => {
+                if (q && !c.searchHaystack.includes(q)) return false;
+
+                if (sentiments.size > 0 && !sentiments.has(c.sentiment)) return false;
+
+                if (dateFrom || dateTo) {
+                    if (!c.call_start) return false;
+                    if (dateFrom && c.call_start < dateFrom) return false;
+                    if (dateTo && c.call_start > dateTo) return false;
+                }
+
+                if (leadMin != null || leadMax != null) {
+                    if (c.leadScore == null) return false;
+                    if (leadMin != null && c.leadScore < leadMin) return false;
+                    if (leadMax != null && c.leadScore > leadMax) return false;
+                }
+
+                return true;
+            });
+
+            const sortBy = ui.sortBy;
+            const leadValue = (c) => (c.leadScore == null ? Number.NEGATIVE_INFINITY : c.leadScore);
+            const timeValue = (c) => (c.call_start ? c.call_start.getTime() : 0);
+
+            out.sort((a, b) => {
+                if (sortBy === "oldest") return timeValue(a) - timeValue(b);
+                if (sortBy === "lead_score_desc") return leadValue(b) - leadValue(a);
+                if (sortBy === "lead_score_asc") return leadValue(a) - leadValue(b);
+                return timeValue(b) - timeValue(a); // newest
+            });
+
+            return out;
+        }
+
+        function computeAnalytics(calls) {
+            const total = calls.length;
+            const now = new Date();
+            const todayKey = now.toISOString().slice(0, 10);
+
+            let callsToday = 0;
+            let leadSum = 0;
+            let leadCount = 0;
+            const sentimentCounts = { positive: 0, neutral: 0, negative: 0, unknown: 0 };
+
+            const byDay = new Map(); // yyyy-mm-dd -> count
+            for (const c of calls) {
+                if (c.call_start) {
+                    const key = c.call_start.toISOString().slice(0, 10);
+                    byDay.set(key, (byDay.get(key) ?? 0) + 1);
+                    if (key === todayKey) callsToday += 1;
+                }
+                if (c.leadScore != null) {
+                    leadSum += c.leadScore;
+                    leadCount += 1;
+                }
+                sentimentCounts[c.sentiment] = (sentimentCounts[c.sentiment] ?? 0) + 1;
             }
+
+            const avgLead = leadCount > 0 ? (leadSum / leadCount) : null;
+
+            // last 14 days histogram (including today)
+            const days = [];
+            for (let i = 13; i >= 0; i--) {
+                const d = new Date(now);
+                d.setDate(now.getDate() - i);
+                const key = d.toISOString().slice(0, 10);
+                days.push({ key, count: byDay.get(key) ?? 0, label: key.slice(5) });
+            }
+
+            return { total, callsToday, avgLead, sentimentCounts, days };
+        }
+
+        function makeSparkBars(days) {
+            const w = 240, h = 44, pad = 2;
+            const max = Math.max(1, ...days.map(d => d.count));
+            const barW = Math.floor((w - pad * (days.length - 1)) / days.length);
+            let x = 0;
+            const rects = days.map(d => {
+                const bh = Math.round((d.count / max) * h);
+                const y = h - bh;
+                const r = `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" ry="2" />`;
+                x += barW + pad;
+                return r;
+            }).join("");
+            return `<svg viewBox="0 0 ${w} ${h}" class="h-11 w-60 text-slate-900/80" aria-hidden="true">
+                <g fill="currentColor" opacity="0.22">${rects}</g>
+            </svg>`;
+        }
+
+        function setTab(tab) {
+            state.selectedTab = tab;
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                const active = btn.getAttribute("data-tab") === tab;
+                btn.className = active
+                    ? "tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-slate-900 text-white"
+                    : "tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50";
+            });
+            renderDetail();
+        }
+
+        function selectedCall() {
+            if (!state.selectedFilename) return null;
+            return state.allCalls.find(c => c.filename === state.selectedFilename) ?? null;
+        }
+
+        function highlight(text, query) {
+            const t = String(text ?? "");
+            const q = query.trim();
+            if (!q) return escapeHtml(t);
+            const idx = t.toLowerCase().indexOf(q.toLowerCase());
+            if (idx < 0) return escapeHtml(t);
+            const pre = t.slice(0, idx);
+            const mid = t.slice(idx, idx + q.length);
+            const post = t.slice(idx + q.length);
+            return `${escapeHtml(pre)}<mark class="bg-amber-100 text-slate-900 rounded px-1">${escapeHtml(mid)}</mark>${escapeHtml(post)}`;
+        }
+
+        function renderAnalytics() {
+            const a = computeAnalytics(state.visibleCalls);
+            const avgLeadText = a.avgLead == null ? "N/A" : a.avgLead.toFixed(1);
+            const topSentiment = Object.entries(a.sentimentCounts).sort((x, y) => (y[1] - x[1]))[0]?.[0] ?? "unknown";
+
+            els.analytics.innerHTML = `
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500">Visible calls</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900">${a.total}</div>
+                    <div class="mt-1 text-xs text-slate-500">After search/filters</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500">Calls today</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900">${a.callsToday}</div>
+                    <div class="mt-1 text-xs text-slate-500">Based on call_start</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="text-xs font-semibold text-slate-500">Avg lead score</div>
+                    <div class="mt-1 text-2xl font-black text-slate-900">${avgLeadText}</div>
+                    <div class="mt-1 text-xs text-slate-500">Only calls with scores</div>
+                </div>
+                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <div class="text-xs font-semibold text-slate-500">Last 14 days</div>
+                            <div class="mt-1 text-xs text-slate-500">Top sentiment: <span class="font-semibold text-slate-700">${escapeHtml(topSentiment)}</span></div>
+                        </div>
+                        ${makeSparkBars(a.days)}
+                    </div>
+                </div>
+            `;
         }
 
         function renderCallList() {
-            const listEl = document.getElementById('call-list');
-            listEl.innerHTML = '';
+            const listEl = els.callList;
 
-            if (allCalls.length === 0) {
-                listEl.innerHTML = '<p class="text-gray-500 text-center mt-4">No calls recorded yet.</p>';
+            if (state.loading) {
+                listEl.innerHTML = `
+                    <div class="space-y-2">
+                        ${Array.from({ length: 8 }).map(() => `
+                            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
+                                <div class="h-4 w-40 bg-slate-200 rounded"></div>
+                                <div class="mt-2 h-3 w-24 bg-slate-200 rounded"></div>
+                                <div class="mt-3 h-3 w-full bg-slate-200 rounded"></div>
+                            </div>
+                        `).join("")}
+                    </div>
+                `;
                 return;
             }
 
-            allCalls.forEach((call, index) => {
-                const div = document.createElement('div');
-                div.className = 'p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-md transition duration-200';
-                div.onclick = () => renderCallDetail(index);
-
-                const isNewFormat = !!call.call_start;
-                const title = isNewFormat && call.caller_number ? call.caller_number : call.filename.replace('.json', '');
-                const dateText = isNewFormat ? new Date(call.call_start).toLocaleString() : 'Legacy Format';
-
-                div.innerHTML = `
-                    <div class="font-bold text-gray-800 text-md truncate">${title}</div>
-                    <div class="text-xs text-gray-500 mt-1">${dateText}</div>
-                    ${call.summary && call.summary.summary ? `<div class="text-sm text-gray-600 mt-2 line-clamp-2">${call.summary.summary}</div>` : ''}
+            if (state.error) {
+                listEl.innerHTML = `
+                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
+                        <div class="font-bold">Couldn’t load calls</div>
+                        <div class="mt-1 text-sm text-rose-800">${escapeHtml(state.error)}</div>
+                        <button id="btn-retry"
+                            class="mt-3 rounded-lg bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-800">
+                            Retry
+                        </button>
+                    </div>
                 `;
-                listEl.appendChild(div);
+                document.getElementById("btn-retry")?.addEventListener("click", () => fetchCalls({ reason: "retry" }));
+                return;
+            }
+
+            if (state.visibleCalls.length === 0) {
+                listEl.innerHTML = `
+                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="font-bold text-slate-900">No calls match</div>
+                        <div class="mt-1 text-sm text-slate-500">Try clearing filters or broadening your search.</div>
+                        <button id="btn-clear-search"
+                            class="mt-4 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                            Clear search & filters
+                        </button>
+                    </div>
+                `;
+                document.getElementById("btn-clear-search")?.addEventListener("click", () => {
+                    state.searchQuery = "";
+                    els.search.value = "";
+                    clearFilters();
+                    recomputeAndRender();
+                });
+                return;
+            }
+
+            listEl.innerHTML = state.visibleCalls.map(call => {
+                const selected = call.filename === state.selectedFilename;
+                const pill = state.newFilenames.has(call.filename)
+                    ? `<span class="ml-2 rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px] font-bold border border-emerald-200">NEW</span>`
+                    : "";
+
+                const summary = call.summary?.summary ? escapeHtml(call.summary.summary) : "";
+                const lead = call.leadScore == null ? "—" : String(call.leadScore);
+                const sentiment = escapeHtml(call.sentiment ?? "unknown");
+
+                return `
+                    <button data-filename="${escapeHtml(call.filename)}"
+                        class="w-full text-left rounded-xl border ${selected ? 'border-slate-900 bg-white' : 'border-slate-200 bg-white hover:border-slate-300'} p-4 shadow-sm transition">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="font-bold text-slate-900 truncate">${escapeHtml(call.title)}${pill}</div>
+                                <div class="mt-1 text-xs text-slate-500">${escapeHtml(call.dateText)}</div>
+                            </div>
+                            <div class="shrink-0 text-right">
+                                <div class="text-[11px] font-bold text-slate-700">Lead ${escapeHtml(lead)}</div>
+                                <div class="mt-1 text-[11px] font-semibold text-slate-500">${sentiment}</div>
+                            </div>
+                        </div>
+                        ${summary ? `<div class="mt-3 text-sm text-slate-600 line-clamp-2">${summary}</div>` : ""}
+                    </button>
+                `;
+            }).join("");
+
+            listEl.querySelectorAll("button[data-filename]").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    const filename = btn.getAttribute("data-filename");
+                    if (!filename) return;
+                    state.selectedFilename = filename;
+                    state.newFilenames.delete(filename);
+                    updateNewCallsPill();
+                    renderCallList();
+                    renderDetail();
+                });
             });
         }
 
-        function renderCallDetail(index) {
-            const call = allCalls[index];
-            document.getElementById('detail-title').innerText = call.caller_number || call.filename;
-            document.getElementById('detail-date').innerText = call.call_start ? new Date(call.call_start).toLocaleString() : '';
-
-            let transcript = call.transcript || call;
-            if (!Array.isArray(transcript)) transcript = [];
-
-            let html = '';
-
-            if (call.summary) {
-                html += `
-                <div class="bg-indigo-50 p-5 rounded-xl mb-8 border border-indigo-100 shadow-sm">
-                    <h3 class="font-bold text-indigo-900 mb-3 text-lg">AI Call Summary</h3>
-                    <div class="grid grid-cols-2 gap-4 mb-3">
-                        <div class="text-sm"><span class="font-semibold text-indigo-800">Lead Score:</span> ${call.summary.lead_score || 'N/A'}</div>
-                        <div class="text-sm"><span class="font-semibold text-indigo-800">Sentiment:</span> ${call.summary.sentiment || 'N/A'}</div>
+        function renderEmptyDetail() {
+            els.detailTitle.textContent = "Select a call";
+            els.detailDate.textContent = "";
+            els.btnExportJson.disabled = true;
+            els.btnCopySummary.classList.add("hidden");
+            els.callDetail.innerHTML = `
+                <div class="h-full flex items-center justify-center">
+                    <div class="max-w-md text-center">
+                        <div class="mx-auto h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm">
+                            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" aria-hidden="true">
+                                <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+                            </svg>
+                        </div>
+                        <div class="mt-4 text-lg font-bold text-slate-900">Open a call</div>
+                        <div class="mt-1 text-sm text-slate-500">Pick a call on the left to view summary, transcript, raw JSON, and exports.</div>
                     </div>
-                    <p class="text-sm text-indigo-900 mb-3"><strong>Summary:</strong> ${call.summary.summary || 'N/A'}</p>
-                    <p class="text-sm text-indigo-900"><strong>Next Steps:</strong> ${call.summary.follow_up_action || 'N/A'}</p>
-                </div>`;
-            }
-
-            html += `<div class="space-y-4">`;
-            transcript.forEach(turn => {
-                const isUser = turn.role === 'user';
-                html += `
-                <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-                    <div class="max-w-[80%] rounded-2xl p-4 shadow-sm ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'}">
-                        <div class="text-xs font-semibold ${isUser ? 'text-blue-200' : 'text-gray-400'} mb-1 uppercase tracking-wider">${isUser ? 'Caller' : 'AI Agent'}</div>
-                        <div class="text-[15px] leading-relaxed">${turn.text}</div>
-                    </div>
-                </div>`;
-            });
-            html += `</div>`;
-
-            if (transcript.length === 0) {
-                html += `<p class="text-center text-gray-500 italic mt-10">No conversational transcript available for this log.</p>`;
-            }
-
-            document.getElementById('call-detail').innerHTML = html;
+                </div>
+            `;
         }
 
-        // Auto-load calls on page load
-        loadCalls();
+        function renderDetail() {
+            const call = selectedCall();
+            if (!call) {
+                renderEmptyDetail();
+                return;
+            }
+
+            els.detailTitle.textContent = call.title;
+            els.detailDate.textContent = call.call_start ? call.call_start.toLocaleString() : call.dateText;
+            els.btnExportJson.disabled = false;
+
+            const q = state.searchQuery.trim();
+            const summaryText = call.summary?.summary ?? null;
+            const nextSteps = call.summary?.follow_up_action ?? null;
+            const lead = call.leadScore == null ? "N/A" : String(call.leadScore);
+            const sentiment = call.sentiment ?? "unknown";
+
+            const summaryHtml = `
+                <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <div class="text-xs font-semibold text-indigo-700">AI summary</div>
+                            <div class="mt-1 text-lg font-black text-indigo-950">Call overview</div>
+                        </div>
+                        <div class="text-right">
+                            <div class="text-xs font-semibold text-indigo-700">Lead score</div>
+                            <div class="mt-1 text-2xl font-black text-indigo-950">${escapeHtml(lead)}</div>
+                            <div class="mt-1 text-xs font-semibold text-indigo-700">Sentiment: <span class="text-indigo-950">${escapeHtml(sentiment)}</span></div>
+                        </div>
+                    </div>
+                    <div class="mt-4 space-y-3">
+                        <div class="rounded-xl bg-white/70 border border-indigo-100 p-4">
+                            <div class="text-xs font-semibold text-indigo-700">Summary</div>
+                            <div class="mt-1 text-sm text-indigo-950">${summaryText ? highlight(summaryText, q) : `<span class="text-indigo-700/70 italic">No summary available.</span>`}</div>
+                        </div>
+                        <div class="rounded-xl bg-white/70 border border-indigo-100 p-4">
+                            <div class="text-xs font-semibold text-indigo-700">Next steps</div>
+                            <div class="mt-1 text-sm text-indigo-950">${nextSteps ? highlight(nextSteps, q) : `<span class="text-indigo-700/70 italic">No follow-up action available.</span>`}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            const transcript = call.transcript ?? [];
+            const transcriptHtml = transcript.length === 0
+                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-slate-700">
+                        <div class="font-bold">No transcript</div>
+                        <div class="mt-1 text-sm text-slate-500">This call log doesn’t contain a conversational transcript array.</div>
+                   </div>`
+                : `<div class="space-y-3">
+                        ${transcript.map((turn, i) => {
+                            const role = (turn?.role ?? "unknown").toString();
+                            const isUser = role === "user";
+                            const who = isUser ? "Caller" : "AI Agent";
+                            const text = turn?.text ?? "";
+                            return `
+                                <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                                    <div class="max-w-[90%] rounded-2xl p-4 shadow-sm ${isUser ? 'bg-slate-900 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-900 rounded-bl-none'}">
+                                        <div class="flex items-center justify-between gap-3">
+                                            <div class="text-xs font-bold ${isUser ? 'text-slate-200' : 'text-slate-400'} uppercase tracking-wider">${escapeHtml(who)}</div>
+                                            <button data-copy-turn="${i}"
+                                                class="text-xs font-semibold ${isUser ? 'text-slate-200/80 hover:text-white' : 'text-slate-500 hover:text-slate-700'}">
+                                                Copy
+                                            </button>
+                                        </div>
+                                        <div class="mt-2 text-[15px] leading-relaxed break-words">${highlight(text, q)}</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join("")}
+                   </div>`;
+
+            const rawHtml = `
+                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div class="flex items-center justify-between gap-3">
+                        <div>
+                            <div class="font-bold text-slate-900">Raw JSON</div>
+                            <div class="text-sm text-slate-500">Exactly what came from the API for this call.</div>
+                        </div>
+                        <button id="btn-copy-raw"
+                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                            Copy JSON
+                        </button>
+                    </div>
+                    <pre class="mt-4 whitespace-pre-wrap break-words text-xs bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 overflow-auto no-scrollbar" id="raw-json">${escapeHtml(JSON.stringify(call.raw, null, 2))}</pre>
+                </div>
+            `;
+
+            const audioUrl = call.raw?.recording_url ?? call.raw?.audio_url ?? null;
+            const audioHtml = audioUrl
+                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="font-bold text-slate-900">Audio</div>
+                        <div class="mt-1 text-sm text-slate-500">Using a URL found in the call log.</div>
+                        <audio class="mt-4 w-full" controls src="${escapeHtml(audioUrl)}"></audio>
+                   </div>`
+                : `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="font-bold text-slate-900">No recording available</div>
+                        <div class="mt-1 text-sm text-slate-500">Your <code>/calls</code> logs don’t include an audio URL yet. If you later add <code>recording_url</code> to the log JSON, this tab will start playing it automatically.</div>
+                   </div>`;
+
+            let html = "";
+            if (state.selectedTab === "summary") html = summaryHtml;
+            else if (state.selectedTab === "transcript") html = transcriptHtml;
+            else if (state.selectedTab === "raw") html = rawHtml;
+            else if (state.selectedTab === "audio") html = audioHtml;
+            else html = summaryHtml;
+
+            els.callDetail.innerHTML = html;
+
+            // Wire detail actions
+            if (state.selectedTab === "transcript") {
+                els.callDetail.querySelectorAll("button[data-copy-turn]").forEach(btn => {
+                    btn.addEventListener("click", async () => {
+                        const idx = Number(btn.getAttribute("data-copy-turn"));
+                        const t = transcript[idx]?.text ?? "";
+                        try { await navigator.clipboard.writeText(String(t)); } catch (_) { }
+                    });
+                });
+            }
+            if (state.selectedTab === "raw") {
+                document.getElementById("btn-copy-raw")?.addEventListener("click", async () => {
+                    try { await navigator.clipboard.writeText(JSON.stringify(call.raw, null, 2)); } catch (_) { }
+                });
+            }
+
+            // Summary copy button visibility
+            if (summaryText) {
+                els.btnCopySummary.classList.remove("hidden");
+            } else {
+                els.btnCopySummary.classList.add("hidden");
+            }
+        }
+
+        function updateSubtitle() {
+            const total = state.allCalls.length;
+            const visible = state.visibleCalls.length;
+            const time = state.lastFetchAt ? `Updated ${state.lastFetchAt.toLocaleTimeString()}` : "";
+            els.sidebarSubtitle.textContent = `${visible}/${total} shown${time ? " • " + time : ""}`;
+        }
+
+        function updateNewCallsPill() {
+            if (state.newFilenames.size > 0) {
+                els.newCallsPill.classList.remove("hidden");
+                els.newCallsPill.textContent = `${state.newFilenames.size} new`;
+            } else {
+                els.newCallsPill.classList.add("hidden");
+            }
+        }
+
+        function recomputeAndRender() {
+            state.visibleCalls = applyFiltersAndSort(state.allCalls, state);
+            renderCallList();
+            renderAnalytics();
+            updateSubtitle();
+            // keep detail consistent
+            if (state.selectedFilename && !state.allCalls.some(c => c.filename === state.selectedFilename)) {
+                state.selectedFilename = null;
+            }
+            renderDetail();
+        }
+
+        async function fetchCalls({ reason } = {}) {
+            if (state.autoRefresh.inFlight) return;
+            state.autoRefresh.inFlight = true;
+            state.loading = true;
+            state.error = null;
+            renderCallList();
+
+            try {
+                const response = await fetch("/calls", { cache: "no-store" });
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                const data = await response.json();
+                const nextCalls = (data?.calls ?? []).map(normalizeCall);
+
+                const prevNames = new Set(state.allCalls.map(c => c.filename));
+                const nextNames = new Set(nextCalls.map(c => c.filename));
+                for (const name of nextNames) {
+                    if (!prevNames.has(name)) state.newFilenames.add(name);
+                }
+                // Clear markers for removed calls
+                for (const name of Array.from(state.newFilenames)) {
+                    if (!nextNames.has(name)) state.newFilenames.delete(name);
+                }
+
+                state.allCalls = nextCalls;
+                state.lastFetchAt = new Date();
+                state.loading = false;
+                updateNewCallsPill();
+                recomputeAndRender();
+
+                // If nothing selected yet, select first result
+                if (!state.selectedFilename && state.visibleCalls.length > 0) {
+                    state.selectedFilename = state.visibleCalls[0].filename;
+                    state.newFilenames.delete(state.selectedFilename);
+                    updateNewCallsPill();
+                    renderCallList();
+                    renderDetail();
+                }
+            } catch (err) {
+                state.loading = false;
+                state.error = err?.message ? String(err.message) : "Unknown error";
+                renderCallList();
+                renderEmptyDetail();
+            } finally {
+                state.autoRefresh.inFlight = false;
+            }
+        }
+
+        function openFilters() {
+            els.filtersModal.classList.remove("hidden");
+        }
+
+        function closeFilters() {
+            els.filtersModal.classList.add("hidden");
+        }
+
+        function clearFilters() {
+            state.filters.dateFrom = null;
+            state.filters.dateTo = null;
+            state.filters.leadMin = null;
+            state.filters.leadMax = null;
+            state.filters.sentiments = new Set();
+
+            els.filterDateFrom.value = "";
+            els.filterDateTo.value = "";
+            els.filterLeadMin.value = "";
+            els.filterLeadMax.value = "";
+            document.querySelectorAll("input.sentiment").forEach(cb => cb.checked = false);
+        }
+
+        function applyFiltersFromModal() {
+            state.filters.dateFrom = els.filterDateFrom.value || null;
+            state.filters.dateTo = els.filterDateTo.value || null;
+            state.filters.leadMin = els.filterLeadMin.value !== "" ? safeNumber(els.filterLeadMin.value) : null;
+            state.filters.leadMax = els.filterLeadMax.value !== "" ? safeNumber(els.filterLeadMax.value) : null;
+
+            const sentiments = new Set();
+            document.querySelectorAll("input.sentiment").forEach(cb => {
+                if (cb.checked) sentiments.add(cb.value);
+            });
+            state.filters.sentiments = sentiments;
+
+            recomputeAndRender();
+            closeFilters();
+        }
+
+        function download(filename, text, mime) {
+            const blob = new Blob([text], { type: mime });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportCsv() {
+            const rows = state.visibleCalls.map(c => ({
+                filename: c.filename,
+                title: c.title,
+                caller_number: c.caller_number ?? "",
+                call_start: c.call_start ? c.call_start.toISOString() : "",
+                lead_score: c.leadScore ?? "",
+                sentiment: c.sentiment ?? "",
+                summary: c.summary?.summary ?? "",
+                follow_up_action: c.summary?.follow_up_action ?? "",
+            }));
+
+            const cols = ["filename", "title", "caller_number", "call_start", "lead_score", "sentiment", "summary", "follow_up_action"];
+            const escapeCsv = (v) => {
+                const s = String(v ?? "");
+                if (/[",\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
+                return s;
+            };
+            const csv = [cols.join(","), ...rows.map(r => cols.map(c => escapeCsv(r[c])).join(","))].join("\n");
+            const stamp = new Date().toISOString().replaceAll(":", "").slice(0, 15);
+            download(`calls_${stamp}.csv`, csv, "text/csv;charset=utf-8");
+        }
+
+        function exportSelectedJson() {
+            const call = selectedCall();
+            if (!call) return;
+            download(call.filename, JSON.stringify(call.raw, null, 2), "application/json;charset=utf-8");
+        }
+
+        function setupAutoRefresh() {
+            if (state.autoRefresh.timer) {
+                clearInterval(state.autoRefresh.timer);
+                state.autoRefresh.timer = null;
+            }
+            if (!state.autoRefresh.enabled) return;
+
+            state.autoRefresh.timer = setInterval(() => {
+                if (document.hidden) return;
+                fetchCalls({ reason: "poll" });
+            }, state.autoRefresh.intervalMs);
+        }
+
+        function setupSidebarResize() {
+            let dragging = false;
+            let startX = 0;
+            let startW = 380;
+
+            els.sidebarResizer.addEventListener("pointerdown", (e) => {
+                dragging = true;
+                startX = e.clientX;
+                startW = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-w")) || 380;
+                els.sidebarResizer.setPointerCapture(e.pointerId);
+            });
+
+            els.sidebarResizer.addEventListener("pointermove", (e) => {
+                if (!dragging) return;
+                const dx = e.clientX - startX;
+                const next = Math.max(280, Math.min(560, startW + dx));
+                document.documentElement.style.setProperty("--sidebar-w", `${next}px`);
+            });
+
+            els.sidebarResizer.addEventListener("pointerup", () => { dragging = false; });
+            els.sidebarResizer.addEventListener("pointercancel", () => { dragging = false; });
+        }
+
+        function wireEvents() {
+            els.btnRefresh.addEventListener("click", () => fetchCalls({ reason: "manual" }));
+            els.search.addEventListener("input", () => {
+                state.searchQuery = els.search.value || "";
+                recomputeAndRender();
+            });
+            els.sort.addEventListener("change", () => {
+                state.sortBy = els.sort.value;
+                recomputeAndRender();
+            });
+
+            els.btnFilters.addEventListener("click", openFilters);
+            els.btnCloseFilters.addEventListener("click", closeFilters);
+            els.filtersModal.addEventListener("click", (e) => {
+                if (e.target === els.filtersModal.firstElementChild) closeFilters();
+            });
+            els.btnApplyFilters.addEventListener("click", applyFiltersFromModal);
+            els.btnClearFilters.addEventListener("click", () => {
+                clearFilters();
+                recomputeAndRender();
+            });
+
+            els.btnExportCsv.addEventListener("click", exportCsv);
+            els.btnExportJson.addEventListener("click", exportSelectedJson);
+            els.btnCopySummary.addEventListener("click", async () => {
+                const call = selectedCall();
+                const text = call?.summary?.summary ?? "";
+                if (!text) return;
+                try { await navigator.clipboard.writeText(String(text)); } catch (_) { }
+            });
+
+            els.autoRefresh.addEventListener("change", () => {
+                state.autoRefresh.enabled = !!els.autoRefresh.checked;
+                setupAutoRefresh();
+            });
+            els.autoRefreshInterval.addEventListener("change", () => {
+                state.autoRefresh.intervalMs = Number(els.autoRefreshInterval.value) || 30000;
+                setupAutoRefresh();
+            });
+            document.addEventListener("visibilitychange", () => {
+                // Avoid a stale view if user comes back after a while
+                if (!document.hidden && state.autoRefresh.enabled) fetchCalls({ reason: "focus" });
+            });
+
+            document.querySelectorAll(".tab-btn").forEach(btn => {
+                btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab")));
+            });
+
+            setupSidebarResize();
+        }
+
+        // Boot
+        renderEmptyDetail();
+        wireEvents();
+        fetchCalls({ reason: "boot" });
     </script>
 </body>
 

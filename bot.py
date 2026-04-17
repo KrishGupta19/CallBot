@@ -71,17 +71,50 @@ class TranscriptLogger(FrameProcessor):
 
 
 # ---------------- SAVE ---------------- #
-async def save_call(tracker):
+async def save_call(tracker, *, call_start: datetime | None, call_end: datetime | None, caller_number: str | None, call_sid: str | None):
     logs = Path("call_logs")
     logs.mkdir(exist_ok=True)
 
-    file = logs / f"call_{datetime.now().strftime('%H%M%S')}.json"
-    file.write_text(json.dumps(tracker, indent=2))
+    now = datetime.now()
+    file = logs / f"call_{now.strftime('%H%M%S')}.json"
+
+    start_iso = call_start.isoformat() if call_start else None
+    end_iso = call_end.isoformat() if call_end else None
+    duration_seconds = None
+    if call_start and call_end:
+        duration_seconds = int((call_end - call_start).total_seconds())
+
+    transcript = tracker if isinstance(tracker, list) else []
+    transcript_text = " ".join([(t.get("text") or "").strip() for t in transcript if isinstance(t, dict)]).strip()
+
+    payload = {
+        "filename": file.name,
+        "call_sid": call_sid,
+        "caller_number": caller_number,
+        "call_start": start_iso,
+        "call_end": end_iso,
+        "duration_seconds": duration_seconds,
+        "transcript": transcript,
+        "transcript_text": transcript_text,
+        "summary": {
+            "caller_name": None,
+            "interest": None,
+            "budget_range": None,
+            "timeline": None,
+            "source": None,
+            "lead_score": None,
+            "sentiment": None,
+            "summary": None,
+            "follow_up_action": None,
+        },
+    }
+
+    file.write_text(json.dumps(payload, indent=2, ensure_ascii=False), encoding="utf-8")
     logger.info(f"Saved: {file}")
 
 
 # ---------------- MAIN BOT ---------------- #
-async def run_bot(websocket, stream_sid: str, call_sid: str = None):
+async def run_bot(websocket, stream_sid: str, call_sid: str = None, caller_number: str = None):
 
     # -------- TRANSPORT -------- #
     # NOTE: vad_enabled/vad_analyzer do NOT exist in FastAPIWebsocketParams
@@ -159,6 +192,9 @@ Keep responses SHORT (1-2 lines)."""
     user_log = TranscriptLogger("user", tracker)
     ai_log = TranscriptLogger("assistant", tracker)
 
+    call_start_dt: datetime | None = None
+    call_end_dt: datetime | None = None
+
     # -------- PIPELINE -------- #
     # LLMTrigger removed: aggregator.user() handles triggering the LLM
     # natively via SpeechTimeoutUserTurnStopStrategy.
@@ -185,12 +221,22 @@ Keep responses SHORT (1-2 lines)."""
     @transport.event_handler("on_client_connected")
     async def connected(transport, client):
         logger.info("CALL STARTED")
+        nonlocal call_start_dt
+        call_start_dt = datetime.now()
         await task.queue_frames([LLMContextFrame(context)])
 
     @transport.event_handler("on_client_disconnected")
     async def disconnected(transport, client):
         logger.info("CALL ENDED")
-        await save_call(tracker)
+        nonlocal call_end_dt
+        call_end_dt = datetime.now()
+        await save_call(
+            tracker,
+            call_start=call_start_dt,
+            call_end=call_end_dt,
+            caller_number=caller_number,
+            call_sid=call_sid,
+        )
         await task.queue_frames([EndFrame()])
 
     runner = PipelineRunner()
