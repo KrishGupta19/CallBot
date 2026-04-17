@@ -1,0 +1,9 @@
+pipecat-ai[silero,groq,cartesia,twilio]
+fastapi==0.111.0
+python-multipart
+uvicorn==0.30.1
+python-dotenv
+loguru
+twilio
+aiohttp
+groq

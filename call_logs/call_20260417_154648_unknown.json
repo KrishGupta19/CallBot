@@ -1,0 +1,11 @@
+{
+  "caller_number": null,
+  "call_start": "2026-04-17T15:46:03.431731",
+  "call_end": "2026-04-17T15:46:48.893978",
+  "duration_seconds": 45,
+  "transcript": [],
+  "transcript_text": "",
+  "summary": {
+    "summary": "No conversation occurred."
+  }
+}

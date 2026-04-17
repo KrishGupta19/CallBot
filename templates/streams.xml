@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Connect>
+        <Stream url="wss://{{ngrok_url}}/ws">
+            <Parameter name="caller_number" value="{{caller_number}}" />
+        </Stream>
+    </Connect>
+    <Pause length="600"/>
+</Response>
