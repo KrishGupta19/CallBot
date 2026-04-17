@@ -144,6 +144,40 @@ Transcript:
         return None
 
 
+def compute_lead_score(intake: dict | None) -> int | None:
+    """
+    Dashboard reads lead score from payload.summary.lead_score.
+
+    Rules (as requested):
+    - Doctor: good lead if appointment is booked.
+    - Bakery: good lead if cake order is made (confirmed).
+    """
+    if not isinstance(intake, dict):
+        return None
+
+    bt = (intake.get("business_type") or "").strip().lower()
+    outcome = (intake.get("outcome") or "").strip().lower()
+
+    if bt == "doctor":
+        if outcome == "booked":
+            return 10
+        if outcome == "needs_callback":
+            return 5
+        if outcome == "emergency_redirect":
+            return 0
+        return 1
+
+    if bt == "bakery":
+        items = (intake.get("items") or "").strip().lower()
+        if outcome == "order_confirmed":
+            return 10 if "cake" in items else 7
+        if outcome == "needs_callback":
+            return 4
+        return 1
+
+    return None
+
+
 # ---------------- TRANSCRIPT LOGGER ---------------- #
 class TranscriptLogger(FrameProcessor):
     def __init__(self, role, tracker):
@@ -197,6 +231,7 @@ async def save_call(
     transcript_text = " ".join([(t.get("text") or "").strip() for t in transcript if isinstance(t, dict)]).strip()
 
     intake = await extract_intake(business_type, transcript_text)
+    lead_score = compute_lead_score(intake)
 
     payload = {
         "filename": file.name,
@@ -215,7 +250,7 @@ async def save_call(
             "budget_range": None,
             "timeline": None,
             "source": None,
-            "lead_score": None,
+            "lead_score": lead_score,
             "sentiment": None,
             "summary": None,
             "follow_up_action": None,

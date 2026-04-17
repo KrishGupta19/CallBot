@@ -2,12 +2,15 @@ import os
 import sys
 import json
 import asyncio
+import io
 from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
 import aiohttp
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import RedirectResponse
 from fastapi.responses import PlainTextResponse, HTMLResponse
@@ -195,6 +198,134 @@ async def get_call_detail(filename: str):
     if isinstance(data, dict):
         data = _attach_recording_from_index(data, _load_recordings_index())
     return data
+
+
+def _flatten_call_for_export(call_data: dict, *, recordings_index: dict, file_mtime_iso: str | None) -> dict:
+    call_data = _attach_recording_from_index(dict(call_data), recordings_index)
+
+    summary = call_data.get("summary") if isinstance(call_data.get("summary"), dict) else {}
+    intake = call_data.get("intake") if isinstance(call_data.get("intake"), dict) else {}
+
+    bt = (call_data.get("business_type") or (intake.get("business_type") if isinstance(intake, dict) else "") or "unknown").strip()
+    outcome = (intake.get("outcome") or "").strip()
+
+    lead_score = summary.get("lead_score")
+    sentiment = summary.get("sentiment")
+
+    items = intake.get("items")
+    patient_name = intake.get("patient_name")
+    customer_name = intake.get("customer_name")
+
+    return {
+        "filename": call_data.get("filename") or "",
+        "call_sid": call_data.get("call_sid") or "",
+        "business_type": bt,
+        "caller_number": call_data.get("caller_number") or "",
+        "call_start": call_data.get("call_start") or file_mtime_iso or "",
+        "call_end": call_data.get("call_end") or "",
+        "duration_seconds": call_data.get("duration_seconds") if call_data.get("duration_seconds") is not None else "",
+        "lead_score": lead_score if lead_score is not None else "",
+        "sentiment": sentiment if sentiment is not None else "",
+        "outcome": outcome,
+        "patient_name": patient_name or "",
+        "customer_name": customer_name or "",
+        "items": items or "",
+        "recording_url": call_data.get("recording_url") or "",
+        "transcript_text": call_data.get("transcript_text") or "",
+        "intake_json": json.dumps(intake, ensure_ascii=False) if intake else "",
+        "summary_text": summary.get("summary") or "",
+        "follow_up_action": summary.get("follow_up_action") or "",
+    }
+
+
+@app.get("/export/excel")
+async def export_excel():
+    """Export ALL call logs to an .xlsx file."""
+    LOGS_DIR.mkdir(exist_ok=True)
+    recordings_index = _load_recordings_index()
+
+    rows: list[dict] = []
+    for fp in sorted(LOGS_DIR.glob("call_*.json"), key=lambda p: p.stat().st_mtime, reverse=True):
+        try:
+            raw = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+
+        mtime_iso = datetime.fromtimestamp(fp.stat().st_mtime).isoformat()
+
+        if isinstance(raw, list):
+            # Legacy transcript-only format.
+            transcript_text = " ".join(
+                [(t.get("text") or "").strip() for t in raw if isinstance(t, dict)]
+            ).strip()
+            data = {
+                "filename": fp.name,
+                "call_sid": "",
+                "business_type": "unknown",
+                "caller_number": "",
+                "call_start": mtime_iso,
+                "call_end": "",
+                "duration_seconds": "",
+                "transcript_text": transcript_text,
+                "intake": None,
+                "summary": {"lead_score": "", "sentiment": "", "summary": "", "follow_up_action": ""},
+            }
+            rows.append(_flatten_call_for_export(data, recordings_index=recordings_index, file_mtime_iso=mtime_iso))
+        elif isinstance(raw, dict):
+            raw = dict(raw)
+            raw.setdefault("filename", fp.name)
+            raw.setdefault("business_type", "unknown")
+            raw.setdefault("intake", None)
+            raw.setdefault("summary", {})
+            rows.append(_flatten_call_for_export(raw, recordings_index=recordings_index, file_mtime_iso=mtime_iso))
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Calls"
+
+    cols = [
+        "filename",
+        "call_sid",
+        "business_type",
+        "caller_number",
+        "call_start",
+        "call_end",
+        "duration_seconds",
+        "lead_score",
+        "sentiment",
+        "outcome",
+        "patient_name",
+        "customer_name",
+        "items",
+        "recording_url",
+        "transcript_text",
+        "intake_json",
+        "summary_text",
+        "follow_up_action",
+    ]
+
+    ws.append(cols)
+    for r in rows:
+        ws.append([r.get(c, "") for c in cols])
+
+    # Basic formatting: bold header and reasonable column widths
+    for cell in ws[1]:
+        cell.font = cell.font.copy(bold=True)
+    for i, c in enumerate(cols, start=1):
+        ws.column_dimensions[get_column_letter(i)].width = min(60, max(12, len(c) + 2))
+
+    bio = io.BytesIO()
+    wb.save(bio)
+    bio.seek(0)
+
+    stamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    filename = f"calls_{stamp}.xlsx"
+    headers = {"Content-Disposition": f'attachment; filename="{filename}"'}
+    return StreamingResponse(
+        bio,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        headers=headers,
+    )
 
 
 @app.get("/dashboard")
