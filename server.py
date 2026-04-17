@@ -7,7 +7,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 from loguru import logger
 from fastapi import FastAPI, WebSocket, Request
-from fastapi.responses import PlainTextResponse
+from fastapi.responses import RedirectResponse
+from fastapi.responses import PlainTextResponse, HTMLResponse
 
 load_dotenv()
 
@@ -27,6 +28,10 @@ NGROK_URL = os.getenv("NGROK_URL", "").replace("https://", "").replace("http://"
 async def health_check():
     return {"status": "ok", "service": "ai-voice-agent"}
 
+@app.get("/")
+async def root():
+    return RedirectResponse(url="/dashboard")
+
 @app.get("/calls")
 async def get_calls():
     """Return recent call logs."""
@@ -38,7 +43,11 @@ async def get_calls():
     for filepath in sorted(logs_dir.glob("call_*.json"), reverse=True)[:20]:
         try:
             call_data = json.loads(filepath.read_text(encoding="utf-8"))
-            calls.append(call_data)
+            if isinstance(call_data, list):
+                calls.append({"filename": filepath.name, "transcript": call_data})
+            else:
+                call_data["filename"] = filepath.name
+                calls.append(call_data)
         except Exception as e:
             logger.error(f"Failed to read {filepath}: {e}")
     
@@ -52,6 +61,19 @@ async def get_call_detail(filename: str):
     if not filepath.exists():
         return {"error": "Call not found"}
     return json.loads(filepath.read_text(encoding="utf-8"))
+
+
+@app.get("/dashboard")
+async def dashboard():
+    """Serve the web dashboard."""
+    dashboard_path = Path(__file__).parent / "dashboard.html"
+    if not dashboard_path.exists():
+        return HTMLResponse("<h1>Dashboard not found</h1><p>Please create dashboard.html</p>", status_code=404)
+    return HTMLResponse(dashboard_path.read_text(encoding="utf-8"))
+
+@app.get("/dashboard/")
+async def dashboard_slash():
+    return RedirectResponse(url="/dashboard")
 
 
 @app.post("/incoming-call")

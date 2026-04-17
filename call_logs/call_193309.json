@@ -1,0 +1,46 @@
+[
+  {
+    "role": "user",
+    "text": "Thank you."
+  },
+  {
+    "role": "assistant",
+    "text": "Namaste, welcome to VCare Techs, kaise ho aap? Can you please tell me your name?"
+  },
+  {
+    "role": "assistant",
+    "text": "Namaste, welcome to VCare Techs, aapka naam kya hai?"
+  },
+  {
+    "role": "user",
+    "text": "My name is Kisha."
+  },
+  {
+    "role": "assistant",
+    "text": "\n\nAccha Kishan ji, aapko kis tarah ka service chahiye - sales automation, support automation, ya kuch aur?"
+  },
+  {
+    "role": "user",
+    "text": "What is it?"
+  },
+  {
+    "role": "assistant",
+    "text": "Humare paas AI-powered sales and support automation services hain, aapko kismein interest hai? Budget kitna hai aapka?"
+  },
+  {
+    "role": "user",
+    "text": "My budget is 5 crore"
+  },
+  {
+    "role": "assistant",
+    "text": "Bahut accha, 5 crore ka budget hai, aur aapka project kab tak complete karna hai, koi specific timeline hai?"
+  },
+  {
+    "role": "user",
+    "text": "So, stop those five minutes."
+  },
+  {
+    "role": "assistant",
+    "text": "Theek hai Kisha ji, hum aapse phir baat karenge, dhanyavad for considering VCare Techs, have a great day!"
+  }
+]

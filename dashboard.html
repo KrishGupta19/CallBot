@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Voice Agent Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-gray-100 h-screen flex overflow-hidden font-sans">
+
+    <!-- Sidebar / Call List -->
+    <div class="w-1/3 md:w-1/4 bg-white border-r border-gray-200 flex flex-col h-full shadow-lg z-10">
+        <div class="p-5 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
+            <h1 class="text-xl font-bold text-gray-800">Call Logs</h1>
+            <button onclick="loadCalls()"
+                class="text-sm bg-blue-600 text-white px-3 py-1.5 rounded-md shadow hover:bg-blue-700 transition">
+                Refresh
+            </button>
+        </div>
+        <div id="call-list" class="flex-1 overflow-y-auto p-3 space-y-2">
+            <p class="text-gray-500 text-center mt-4">Loading calls...</p>
+        </div>
+    </div>
+
+    <!-- Detail View -->
+    <div class="flex-1 flex flex-col h-full bg-slate-50 relative">
+        <div class="p-5 border-b border-gray-200 bg-white shadow-sm flex justify-between items-center z-10">
+            <h2 class="text-lg font-bold text-gray-800" id="detail-title">Select a call from the menu</h2>
+            <span id="detail-date" class="text-sm text-gray-500 font-medium"></span>
+        </div>
+
+        <div id="call-detail" class="flex-1 overflow-y-auto p-6 lg:p-10">
+            <div class="h-full flex items-center justify-center text-gray-400 text-lg">
+                Click on a call to view its transcript and AI summary.
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allCalls = [];
+
+        async function loadCalls() {
+            document.getElementById('call-list').innerHTML = '<p class="text-gray-500 text-center mt-4">Fetching logs...</p>';
+            try {
+                const response = await fetch('/calls');
+                const data = await response.json();
+                allCalls = data.calls || [];
+                renderCallList();
+            } catch (err) {
+                document.getElementById('call-list').innerHTML = '<p class="text-red-500 text-center mt-4">Error loading calls.</p>';
+            }
+        }
+
+        function renderCallList() {
+            const listEl = document.getElementById('call-list');
+            listEl.innerHTML = '';
+
+            if (allCalls.length === 0) {
+                listEl.innerHTML = '<p class="text-gray-500 text-center mt-4">No calls recorded yet.</p>';
+                return;
+            }
+
+            allCalls.forEach((call, index) => {
+                const div = document.createElement('div');
+                div.className = 'p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:border-blue-400 hover:shadow-md transition duration-200';
+                div.onclick = () => renderCallDetail(index);
+
+                const isNewFormat = !!call.call_start;
+                const title = isNewFormat && call.caller_number ? call.caller_number : call.filename.replace('.json', '');
+                const dateText = isNewFormat ? new Date(call.call_start).toLocaleString() : 'Legacy Format';
+
+                div.innerHTML = `
+                    <div class="font-bold text-gray-800 text-md truncate">${title}</div>
+                    <div class="text-xs text-gray-500 mt-1">${dateText}</div>
+                    ${call.summary && call.summary.summary ? `<div class="text-sm text-gray-600 mt-2 line-clamp-2">${call.summary.summary}</div>` : ''}
+                `;
+                listEl.appendChild(div);
+            });
+        }
+
+        function renderCallDetail(index) {
+            const call = allCalls[index];
+            document.getElementById('detail-title').innerText = call.caller_number || call.filename;
+            document.getElementById('detail-date').innerText = call.call_start ? new Date(call.call_start).toLocaleString() : '';
+
+            let transcript = call.transcript || call;
+            if (!Array.isArray(transcript)) transcript = [];
+
+            let html = '';
+
+            if (call.summary) {
+                html += `
+                <div class="bg-indigo-50 p-5 rounded-xl mb-8 border border-indigo-100 shadow-sm">
+                    <h3 class="font-bold text-indigo-900 mb-3 text-lg">AI Call Summary</h3>
+                    <div class="grid grid-cols-2 gap-4 mb-3">
+                        <div class="text-sm"><span class="font-semibold text-indigo-800">Lead Score:</span> ${call.summary.lead_score || 'N/A'}</div>
+                        <div class="text-sm"><span class="font-semibold text-indigo-800">Sentiment:</span> ${call.summary.sentiment || 'N/A'}</div>
+                    </div>
+                    <p class="text-sm text-indigo-900 mb-3"><strong>Summary:</strong> ${call.summary.summary || 'N/A'}</p>
+                    <p class="text-sm text-indigo-900"><strong>Next Steps:</strong> ${call.summary.follow_up_action || 'N/A'}</p>
+                </div>`;
+            }
+
+            html += `<div class="space-y-4">`;
+            transcript.forEach(turn => {
+                const isUser = turn.role === 'user';
+                html += `
+                <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] rounded-2xl p-4 shadow-sm ${isUser ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white border border-gray-200 text-gray-800 rounded-bl-none'}">
+                        <div class="text-xs font-semibold ${isUser ? 'text-blue-200' : 'text-gray-400'} mb-1 uppercase tracking-wider">${isUser ? 'Caller' : 'AI Agent'}</div>
+                        <div class="text-[15px] leading-relaxed">${turn.text}</div>
+                    </div>
+                </div>`;
+            });
+            html += `</div>`;
+
+            if (transcript.length === 0) {
+                html += `<p class="text-center text-gray-500 italic mt-10">No conversational transcript available for this log.</p>`;
+            }
+
+            document.getElementById('call-detail').innerHTML = html;
+        }
+
+        // Auto-load calls on page load
+        loadCalls();
+    </script>
+</body>
+
+</html>
