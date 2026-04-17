@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip show *)",
+      "Bash(python -c \"from pipecat.frames.frames import TranscriptionFrame; print\\('OK'\\)\")",
+      "Bash(python -c \"from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair; print\\('OK'\\)\")",
+      "Bash(python *)"
+    ]
+  }
+}

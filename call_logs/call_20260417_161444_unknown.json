@@ -1,0 +1,25 @@
+{
+  "caller_number": null,
+  "call_start": "2026-04-17T16:14:23.860061",
+  "call_end": "2026-04-17T16:14:44.274628",
+  "duration_seconds": 20,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Hi! Main VCare Techs se bol raha hoon, Aapka naam kya hai?",
+      "timestamp": "2026-04-17T16:14:24.528854"
+    }
+  ],
+  "transcript_text": "AI Agent: Hi! Main VCare Techs se bol raha hoon, Aapka naam kya hai?",
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}
