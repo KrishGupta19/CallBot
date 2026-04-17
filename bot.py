@@ -38,8 +38,7 @@ from pipecat.frames.frames import (
     EndFrame, 
     TranscriptionFrame, 
     TextFrame, 
-    LLMFullResponseEndFrame,
-    LLMMessagesAppendFrame
+    LLMFullResponseEndFrame
 )
 from pipecat.processors.frame_processor import FrameProcessor
 from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair
@@ -323,7 +322,7 @@ RULES:
     async def on_client_connected(transport, client):
         logger.info("Caller connected")
         # Trigger the first message from the AI (greeting)
-        await task.queue_frames([LLMMessagesAppendFrame(context.get_messages())])
+        await task.queue_frames([LLMContextFrame(context)])
 
     @transport.event_handler("on_client_disconnected")
     async def on_client_disconnected(transport, client):
