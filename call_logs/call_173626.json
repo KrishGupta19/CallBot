@@ -1,0 +1,62 @@
+[
+  {
+    "role": "assistant",
+    "text": "Namaste, hello! Kaise ho aap, how can VCare Techs help you today?"
+  },
+  {
+    "role": "user",
+    "text": "Hello? Hello?"
+  },
+  {
+    "role": "assistant",
+    "text": "Namaste, kaise ho? Welcome to VCare Techs, main aapki madad kaise kar sakta hoon?"
+  },
+  {
+    "role": "user",
+    "text": "I wanted to go to the store. What are your services?"
+  },
+  {
+    "role": "assistant",
+    "text": "Aapka naam kya hai, sir? And humare services mein AI-powered sales and support automation solutions hain, kya aap ismein interest rakhte hain?"
+  },
+  {
+    "role": "user",
+    "text": "I am interested in AI-related services. My name is Arun."
+  },
+  {
+    "role": "assistant",
+    "text": "Arun ji, aapka budget kya hai for these AI services, and kis tarah ka service aapko chahiye, sales automation ya support automation?"
+  },
+  {
+    "role": "user",
+    "text": "Here we go to that Gaza bagus"
+  },
+  {
+    "role": "assistant",
+    "text": "Arun ji, aapka budget kitna hai, and kab tak aap yeh service lena chahte hain, kya aapka koi specific timeline hai?"
+  },
+  {
+    "role": "user",
+    "text": "but but"
+  },
+  {
+    "role": "user",
+    "text": "foreign foreign"
+  },
+  {
+    "role": "assistant",
+    "text": "Arun ji, chalo theek hai, aapko humara sales team detail mein call back karega, dhanyavad for considering VCare Techs, namaste!"
+  },
+  {
+    "role": "user",
+    "text": "Thank you."
+  },
+  {
+    "role": "user",
+    "text": "Huh?"
+  },
+  {
+    "role": "assistant",
+    "text": "Arun ji, toh aapki details note kar li, hum aapko jaldi se follow-up karenge, dhanyavaad!"
+  }
+]

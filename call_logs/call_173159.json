@@ -1,0 +1,46 @@
+[
+  {
+    "role": "user",
+    "text": "Thank you."
+  },
+  {
+    "role": "assistant",
+    "text": "Namaste, welcome to VCare Techs, aapka kya naam hai? \nWhat's your name, sir/ma'am?"
+  },
+  {
+    "role": "assistant",
+    "text": "Namaste, welcome to VCare Techs! May I know your name, please?"
+  },
+  {
+    "role": "user",
+    "text": "with a name Chris"
+  },
+  {
+    "role": "assistant",
+    "text": "Hello Chris, VCare Techs mein aapko kis tarah ki service chahiye, sales automation ya support automation?"
+  },
+  {
+    "role": "user",
+    "text": "KB"
+  },
+  {
+    "role": "assistant",
+    "text": "Chris, to aapko kb ke liye budget allocate kiya hai, kitna investment karne ke liye taiyaar hain?"
+  },
+  {
+    "role": "user",
+    "text": "Thank you."
+  },
+  {
+    "role": "assistant",
+    "text": "Chris, aapka project kabse shuru karna chahte hain, kya timeline hai aapki?"
+  },
+  {
+    "role": "user",
+    "text": "der"
+  },
+  {
+    "role": "assistant",
+    "text": "Theek hai Chris, dhanyavad for your interest, hum aapko jald hi details bhejenge, have a great day!"
+  }
+]
