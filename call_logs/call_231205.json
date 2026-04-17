@@ -1,0 +1,76 @@
+{
+  "filename": "call_231205.json",
+  "call_sid": "CAba71be86f8faed012bcea39b32b5ec75",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-17T23:11:25.477347",
+  "call_end": "2026-04-17T23:12:05.881885",
+  "duration_seconds": 40,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, welcome to our bakery. Aapka naam kya hai, sir/ma'am?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka order confirm karne ke liye, aapka naam kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Chris."
+    },
+    {
+      "role": "assistant",
+      "text": "Achha, thank you Chris ji. Aapka phone number kya hai, ya phir main caller ID check kar loon?"
+    },
+    {
+      "role": "user",
+      "text": "My phone number is... I'll tell you."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, please batayein, aapka phone number kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "Neiva Donva."
+    },
+    {
+      "role": "assistant",
+      "text": "Maaf kijiye, phone number number chaiye, not naam. Toh aapka phone number kya hai, Chris ji?"
+    }
+  ],
+  "transcript_text": "Thank you. Namaste, welcome to our bakery. Aapka naam kya hai, sir/ma'am? Aapka order confirm karne ke liye, aapka naam kya hai? My name is Chris. Achha, thank you Chris ji. Aapka phone number kya hai, ya phir main caller ID check kar loon? My phone number is... I'll tell you. Theek hai, please batayein, aapka phone number kya hai? Neiva Donva. Maaf kijiye, phone number number chaiye, not naam. Toh aapka phone number kya hai, Chris ji?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "customer_name": "Chris",
+    "phone_number": null,
+    "items": null,
+    "quantity": null,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer did not provide phone number, only mentioned a name 'Neiva Donva' which seems to be a mistake"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  },
+  "recording_sid": "RE04289d7e939fd8da6f245845df9d546a",
+  "recording_url": "/recordings/RE04289d7e939fd8da6f245845df9d546a.mp3",
+  "recording_status": "completed"
+}

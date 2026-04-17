@@ -1,0 +1,39 @@
+{
+  "filename": "call_223524.json",
+  "call_sid": "CA548492e33dcdcb3632de3018efdfe513",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-17T22:34:46.316195",
+  "call_end": "2026-04-17T22:35:24.137956",
+  "duration_seconds": 37,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, clinic se baat ho rahi hai. Aapka naam kya hai?"
+    }
+  ],
+  "transcript_text": "Namaste, clinic se baat ho rahi hai. Aapka naam kya hai?",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": null,
+    "phone_number": null,
+    "is_new_patient": null,
+    "reason_for_visit": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": null,
+    "notes": "Call started with greeting, patient information not provided yet."
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}

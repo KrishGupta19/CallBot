@@ -7,9 +7,12 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
+import aiohttp
 from fastapi import FastAPI, WebSocket, Request
 from fastapi.responses import RedirectResponse
 from fastapi.responses import PlainTextResponse, HTMLResponse
+from fastapi.responses import Response, StreamingResponse
+from twilio.rest import Client as TwilioClient
 
 load_dotenv()
 
@@ -24,6 +27,97 @@ app = FastAPI()
 
 NGROK_URL = os.getenv("NGROK_URL", "").replace("https://", "").replace("http://", "").rstrip("/")
 
+LOGS_DIR = Path(__file__).parent / "call_logs"
+RECORDINGS_DIR = Path(__file__).parent / "call_recordings"
+RECORDINGS_INDEX_PATH = LOGS_DIR / "_recordings_index.json"
+
+
+def _load_recordings_index() -> dict:
+    try:
+        if not RECORDINGS_INDEX_PATH.exists():
+            return {}
+        data = json.loads(RECORDINGS_INDEX_PATH.read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except Exception:
+        return {}
+
+
+def _save_recordings_index(index: dict) -> None:
+    try:
+        LOGS_DIR.mkdir(exist_ok=True)
+        RECORDINGS_INDEX_PATH.write_text(
+            json.dumps(index, indent=2, ensure_ascii=False), encoding="utf-8"
+        )
+    except Exception as e:
+        logger.warning(f"Failed to write recordings index: {e}")
+
+
+def _attach_recording_from_index(call_data: dict, index: dict) -> dict:
+    if not isinstance(call_data, dict):
+        return call_data
+    if call_data.get("recording_url"):
+        return call_data
+    call_sid = call_data.get("call_sid")
+    if not call_sid:
+        return call_data
+    rec = index.get(call_sid)
+    if not isinstance(rec, dict):
+        return call_data
+    recording_sid = rec.get("recording_sid")
+    if not recording_sid:
+        return call_data
+    call_data["recording_sid"] = recording_sid
+    call_data["recording_status"] = rec.get("recording_status") or "completed"
+    # Prefer local file if present, else proxy endpoint.
+    local_path = RECORDINGS_DIR / f"{recording_sid}.mp3"
+    call_data["recording_url"] = (
+        f"/recordings-local/{recording_sid}.mp3"
+        if local_path.exists()
+        else f"/recordings/{recording_sid}.mp3"
+    )
+    return call_data
+
+
+def _public_base_url(request: Request) -> str:
+    """
+    Best-effort public base URL (works behind ngrok).
+    Twilio requires absolute URLs for action/callback.
+    """
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    return f"{proto}://{host}".rstrip("/")
+
+
+def _public_ws_url(request: Request) -> str:
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    # Twilio <Stream> must use wss:// for public endpoints.
+    return f"wss://{host}/ws"
+
+
+async def _start_twilio_recording(call_sid: str, *, callback_url: str) -> None:
+    """
+    Start recording via Twilio REST API (more reliable with <Connect><Stream>).
+    """
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID") or ""
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN") or ""
+    if not account_sid or not auth_token:
+        logger.warning("TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN not set; cannot start recording")
+        return
+
+    def _run():
+        client = TwilioClient(account_sid, auth_token)
+        rec = client.calls(call_sid).recordings.create(
+            recording_status_callback=callback_url,
+            recording_status_callback_event=["completed"],
+        )
+        return rec.sid
+
+    try:
+        rec_sid = await asyncio.to_thread(_run)
+        logger.info(f"Started Twilio recording: call_sid={call_sid} recording_sid={rec_sid}")
+    except Exception as e:
+        logger.warning(f"Failed to start Twilio recording via REST: {e}")
+
 
 @app.get("/health")
 async def health_check():
@@ -36,10 +130,11 @@ async def root():
 @app.get("/calls")
 async def get_calls():
     """Return recent call logs."""
-    logs_dir = Path(__file__).parent / "call_logs"
+    logs_dir = LOGS_DIR
     if not logs_dir.exists():
         return {"calls": []}
     
+    recordings_index = _load_recordings_index()
     calls = []
     for filepath in sorted(logs_dir.glob("call_*.json"), reverse=True)[:20]:
         try:
@@ -82,6 +177,7 @@ async def get_calls():
                 call_data["filename"] = filepath.name
                 call_data.setdefault("business_type", "unknown")
                 call_data.setdefault("intake", None)
+                call_data = _attach_recording_from_index(call_data, recordings_index)
                 calls.append(call_data)
         except Exception as e:
             logger.error(f"Failed to read {filepath}: {e}")
@@ -92,10 +188,13 @@ async def get_calls():
 @app.get("/calls/{filename}")
 async def get_call_detail(filename: str):
     """Return a specific call log."""
-    filepath = Path(__file__).parent / "call_logs" / filename
+    filepath = LOGS_DIR / filename
     if not filepath.exists():
         return {"error": "Call not found"}
-    return json.loads(filepath.read_text(encoding="utf-8"))
+    data = json.loads(filepath.read_text(encoding="utf-8"))
+    if isinstance(data, dict):
+        data = _attach_recording_from_index(data, _load_recordings_index())
+    return data
 
 
 @app.get("/dashboard")
@@ -123,8 +222,8 @@ async def incoming_call(request: Request):
     caller_number = form_data.get("From", "unknown")
     logger.info(f"Incoming call from: {caller_number}")
 
-    base_url = f"https://{NGROK_URL}" if NGROK_URL else ""
-    route_url = f"{base_url}/route-call" if base_url else "/route-call"
+    public_base = _public_base_url(request)
+    route_url = f"{public_base}/route-call"
 
     # Return the IVR menu
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
@@ -133,7 +232,7 @@ async def incoming_call(request: Request):
         <Say voice="alice">Welcome. For doctor appointments, press 1. For bakery orders, press 2.</Say>
     </Gather>
     <Say voice="alice">Sorry, I did not receive your selection.</Say>
-    <Redirect method="POST">/incoming-call</Redirect>
+    <Redirect method="POST">{public_base}/incoming-call</Redirect>
 </Response>"""
 
     return PlainTextResponse(content=twiml, media_type="application/xml")
@@ -149,18 +248,26 @@ async def route_call(request: Request):
     business_type = "doctor" if digits == "1" else "bakery" if digits == "2" else "unknown"
     logger.info(f"IVR selection digits={digits!r} -> business_type={business_type} caller={caller_number}")
 
+    public_base = _public_base_url(request)
+    ws_url = _public_ws_url(request) if not NGROK_URL else f"wss://{NGROK_URL}/ws"
+
     if business_type == "unknown":
-        twiml = """<?xml version="1.0" encoding="UTF-8"?>
+        twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Say voice="alice">Invalid selection.</Say>
-    <Redirect method="POST">/incoming-call</Redirect>
+    <Redirect method="POST">{public_base}/incoming-call</Redirect>
 </Response>"""
         return PlainTextResponse(content=twiml, media_type="application/xml")
 
+    recording_status_url = f"{public_base}/recording-status"
+
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
+    <Start>
+        <Record recordingStatusCallback="{recording_status_url}" recordingStatusCallbackMethod="POST" recordingStatusCallbackEvent="completed" />
+    </Start>
     <Connect>
-        <Stream url="wss://{NGROK_URL}/ws">
+        <Stream url="{ws_url}">
             <Parameter name="caller_number" value="{caller_number}" />
             <Parameter name="business_type" value="{business_type}" />
         </Stream>
@@ -168,6 +275,124 @@ async def route_call(request: Request):
 </Response>"""
     return PlainTextResponse(content=twiml, media_type="application/xml")
 
+
+@app.post("/recording-status")
+async def recording_status(request: Request):
+    """
+    Twilio calls this when a recording is available.
+    We attach recording info to the matching call log by call_sid.
+    """
+    form_data = await request.form()
+    call_sid = (form_data.get("CallSid") or "").strip()
+    recording_sid = (form_data.get("RecordingSid") or "").strip()
+    recording_status = (form_data.get("RecordingStatus") or "").strip()
+
+    logger.info(f"Recording status: call_sid={call_sid} recording_sid={recording_sid} status={recording_status}")
+
+    if not call_sid or not recording_sid:
+        return PlainTextResponse("missing CallSid/RecordingSid", status_code=400)
+
+    logs_dir = LOGS_DIR
+    if not logs_dir.exists():
+        logs_dir.mkdir(exist_ok=True)
+
+    # Persist mapping even if the call log isn't written yet (callback timing).
+    index = _load_recordings_index()
+    index[call_sid] = {
+        "recording_sid": recording_sid,
+        "recording_status": recording_status or "completed",
+        "updated_at": datetime.now().isoformat(),
+    }
+    _save_recordings_index(index)
+
+    # Find the most recent log matching this call_sid
+    candidates = sorted(logs_dir.glob("call_*.json"), key=lambda p: p.stat().st_mtime, reverse=True)[:80]
+    for fp in candidates:
+        try:
+            data = json.loads(fp.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if isinstance(data, dict) and (data.get("call_sid") == call_sid):
+            data["recording_sid"] = recording_sid
+            # Prefer serving from local if downloaded, else proxy endpoint.
+            local_path = RECORDINGS_DIR / f"{recording_sid}.mp3"
+            data["recording_url"] = (
+                f"/recordings-local/{recording_sid}.mp3"
+                if local_path.exists()
+                else f"/recordings/{recording_sid}.mp3"
+            )
+            data["recording_status"] = recording_status or "completed"
+            fp.write_text(json.dumps(data, indent=2, ensure_ascii=False), encoding="utf-8")
+            break
+
+    # Best-effort: download recording locally for long-term storage.
+    try:
+        RECORDINGS_DIR.mkdir(exist_ok=True)
+        await _download_recording_mp3(recording_sid)
+    except Exception as e:
+        logger.warning(f"Failed to download recording locally: {e}")
+
+    return PlainTextResponse("ok")
+
+async def _download_recording_mp3(recording_sid: str) -> None:
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID") or ""
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN") or ""
+    if not account_sid or not auth_token:
+        raise RuntimeError("Missing TWILIO_ACCOUNT_SID/TWILIO_AUTH_TOKEN")
+
+    out_path = RECORDINGS_DIR / f"{recording_sid}.mp3"
+    if out_path.exists() and out_path.stat().st_size > 0:
+        return
+
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording_sid}.mp3"
+    auth = aiohttp.BasicAuth(login=account_sid, password=auth_token)
+    async with aiohttp.ClientSession(auth=auth) as session:
+        async with session.get(url) as resp:
+            if resp.status >= 400:
+                text = await resp.text()
+                raise RuntimeError(f"Twilio download failed: {resp.status} {text[:200]}")
+            out_path.write_bytes(await resp.read())
+
+
+@app.get("/recordings/{recording_sid}.mp3")
+async def recording_proxy_mp3(recording_sid: str):
+    """
+    Proxy Twilio recording audio to the browser (Twilio requires auth).
+    Requires TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN in env.
+    """
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID") or ""
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN") or ""
+    if not account_sid or not auth_token:
+        return PlainTextResponse("Twilio credentials not configured", status_code=500)
+
+    # Twilio recording media URL pattern:
+    # https://api.twilio.com/2010-04-01/Accounts/{AccountSid}/Recordings/{RecordingSid}.mp3
+    url = f"https://api.twilio.com/2010-04-01/Accounts/{account_sid}/Recordings/{recording_sid}.mp3"
+
+    async def iter_bytes():
+        auth = aiohttp.BasicAuth(login=account_sid, password=auth_token)
+        async with aiohttp.ClientSession(auth=auth) as session:
+            async with session.get(url) as resp:
+                if resp.status >= 400:
+                    text = await resp.text()
+                    raise RuntimeError(f"Twilio fetch failed: {resp.status} {text[:200]}")
+                async for chunk in resp.content.iter_chunked(1024 * 64):
+                    yield chunk
+
+    try:
+        return StreamingResponse(iter_bytes(), media_type="audio/mpeg")
+    except Exception as e:
+        logger.error(f"Recording proxy error: {e}")
+        return PlainTextResponse("Failed to fetch recording", status_code=502)
+
+
+@app.get("/recordings-local/{recording_sid}.mp3")
+async def recording_local_mp3(recording_sid: str):
+    """Serve a previously downloaded recording from disk."""
+    path = RECORDINGS_DIR / f"{recording_sid}.mp3"
+    if not path.exists():
+        return PlainTextResponse("Recording not found locally", status_code=404)
+    return Response(content=path.read_bytes(), media_type="audio/mpeg")
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
@@ -203,6 +428,15 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.error("Never received Twilio stream_sid, closing connection")
         await websocket.close()
         return
+
+    # Kick off call recording (REST API). This is more reliable than TwiML Start/Record
+    # for <Connect><Stream> flows.
+    if call_sid:
+        callback_url = f"https://{NGROK_URL}/recording-status" if NGROK_URL else ""
+        if callback_url:
+            asyncio.create_task(_start_twilio_recording(call_sid, callback_url=callback_url))
+        else:
+            logger.warning("NGROK_URL not set; cannot construct recording-status callback URL")
 
     try:
         from bot import run_bot

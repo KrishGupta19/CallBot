@@ -1,0 +1,129 @@
+{
+  "filename": "call_220804.json",
+  "call_sid": "CA89ae6011a1836fc073d46d32beb1fca5",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-17T22:05:22.107128",
+  "call_end": "2026-04-17T22:08:04.855919",
+  "duration_seconds": 162,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, aapka order confirm karne ke liye, aapka name kya hai?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka order confirm karna hai, toh pehle aapka naam batayein, please?"
+    },
+    {
+      "role": "user",
+      "text": "Hi, my name is Krish and I want to confirm my order."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka phone number kya hai, ya phir aap ek moment ruk sakte hain, main caller ID se check kar leta hoon?"
+    },
+    {
+      "role": "user",
+      "text": "My phone number is 9871134157."
+    },
+    {
+      "role": "assistant",
+      "text": "Caller ID match ho gaya, ab aap kya items order karna chahte hain, jaise ki cake, bread, pastry ya kuch aur?"
+    },
+    {
+      "role": "user",
+      "text": "I have a cake order."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, cake ki quantity kitni hai, ek ya adhik?"
+    },
+    {
+      "role": "user",
+      "text": "quantity means what do you say again?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aap kitne cakes order karna chahte hain, ek cake, do cake, ya phir aur bhi zyada?"
+    },
+    {
+      "role": "user",
+      "text": "When, when, when."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka cake kab tak chahiye, kis date par pickup ya delivery chahiye aapko?"
+    },
+    {
+      "role": "user",
+      "text": "Call it back to you."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapko pickup ya delivery chahiye, pickup se lena hai ya hum ghar tak pahunchayenge, pickup ya delivery?"
+    },
+    {
+      "role": "user",
+      "text": "I will do the pick up"
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, pickup karoge aap, to ab time bataiye, kis time pe pickup karna hai, subah, dopahar, ya shaam?"
+    },
+    {
+      "role": "user",
+      "text": "sham go vantwache"
+    },
+    {
+      "role": "assistant",
+      "text": "Sham ko 5 baje se 6 baje ke beech pickup karoge, aapke order ki special instructions kuchh hai, jaise ki cake par koi message?"
+    },
+    {
+      "role": "user",
+      "text": "I'll take a very good to you."
+    },
+    {
+      "role": "assistant",
+      "text": "Dhanyavad Krish, aapka order confirm hai, main summary sunaata hoon, aapka phone number 9871134157 hai, aapne ek cake order kiya hai, pickup karoge aap, kal sham 5-6 baje ke beech, koi special instructions nahi hai, theek hai?"
+    },
+    {
+      "role": "user",
+      "text": "Yes."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka order confirm ho gaya hai, hum aapko kal sham 5-6 baje ke beech cake ready rakhenge, dhanyavad Krish ji."
+    }
+  ],
+  "transcript_text": "Thank you. Namaste, aapka order confirm karne ke liye, aapka name kya hai? Aapka order confirm karna hai, toh pehle aapka naam batayein, please? Hi, my name is Krish and I want to confirm my order. Aapka phone number kya hai, ya phir aap ek moment ruk sakte hain, main caller ID se check kar leta hoon? My phone number is 9871134157. Caller ID match ho gaya, ab aap kya items order karna chahte hain, jaise ki cake, bread, pastry ya kuch aur? I have a cake order. Theek hai, cake ki quantity kitni hai, ek ya adhik? quantity means what do you say again? Aap kitne cakes order karna chahte hain, ek cake, do cake, ya phir aur bhi zyada? When, when, when. Aapka cake kab tak chahiye, kis date par pickup ya delivery chahiye aapko? Call it back to you. Aapko pickup ya delivery chahiye, pickup se lena hai ya hum ghar tak pahunchayenge, pickup ya delivery? I will do the pick up Theek hai, pickup karoge aap, to ab time bataiye, kis time pe pickup karna hai, subah, dopahar, ya shaam? sham go vantwache Sham ko 5 baje se 6 baje ke beech pickup karoge, aapke order ki special instructions kuchh hai, jaise ki cake par koi message? I'll take a very good to you. Dhanyavad Krish, aapka order confirm hai, main summary sunaata hoon, aapka phone number 9871134157 hai, aapne ek cake order kiya hai, pickup karoge aap, kal sham 5-6 baje ke beech, koi special instructions nahi hai, theek hai? Yes. Aapka order confirm ho gaya hai, hum aapko kal sham 5-6 baje ke beech cake ready rakhenge, dhanyavad Krish ji.",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "order_confirmed",
+    "customer_name": "Krish",
+    "phone_number": "9871134157",
+    "items": "cake",
+    "quantity": 1,
+    "pickup_or_delivery": "pickup",
+    "desired_date": "tomorrow",
+    "desired_time": "5-6 pm",
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer confirmed the order for cake pickup tomorrow between 5-6 pm"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}

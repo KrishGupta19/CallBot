@@ -1,0 +1,49 @@
+{
+  "filename": "call_222532.json",
+  "call_sid": "CA164f5741a302fcd7b18ab4290c4c39f3",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-17T22:25:01.847549",
+  "call_end": "2026-04-17T22:25:32.841712",
+  "duration_seconds": 30,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, aapka order confirm karne ke liye kuch details chahiye, aapka name kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "Your name is Chris."
+    },
+    {
+      "role": "assistant",
+      "text": "Achha Chris ji, aapka phone number kya hai, yeh match karta hai na caller ID se?"
+    }
+  ],
+  "transcript_text": "Namaste, aapka order confirm karne ke liye kuch details chahiye, aapka name kya hai? Your name is Chris. Achha Chris ji, aapka phone number kya hai, yeh match karta hai na caller ID se?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "customer_name": "Chris",
+    "phone_number": null,
+    "items": null,
+    "quantity": null,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer name confirmed, waiting for phone number confirmation"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}

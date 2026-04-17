@@ -1,0 +1,119 @@
+{
+  "filename": "call_230815.json",
+  "call_sid": "CA9986ba63e594db37601706e8b79efcba",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-17T23:06:00.788079",
+  "call_end": "2026-04-17T23:08:15.214097",
+  "duration_seconds": 134,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, welcome to our clinic. Aapka naam kya hai? (What's your name?)"
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, welcome to our clinic, aapka naam kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "RENAM PRICE"
+    },
+    {
+      "role": "assistant",
+      "text": "Dhanyavad Renam Price ji, aapka phone number hai (your phone number is) 0987654321, aisa hi hai na? (is that correct?)"
+    },
+    {
+      "role": "user",
+      "text": "I'm dear to you."
+    },
+    {
+      "role": "assistant",
+      "text": "Renam Price ji, aapka number caller ID se match nahi kar raha, aap apna sahi number please batayein? (Your number isn't matching the caller ID, can you please tell me your correct number?)"
+    },
+    {
+      "role": "user",
+      "text": "98 98 721 34157"
+    },
+    {
+      "role": "assistant",
+      "text": "Dhanyavad Renam Price ji, aap hai new patient ya pehle se hamare clinic mein aaye ho? (Are you a new patient or have you visited our clinic before?)"
+    },
+    {
+      "role": "user",
+      "text": "Hello, I will visit the beginning for the first time."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka pehla visit hai, theek hai. Aapke visit ka reason kya hai, kis wajah se aap doctor se milna chahte hain? (This is your first visit, okay. What's the reason for your visit, why do you want to meet the doctor?)"
+    },
+    {
+      "role": "user",
+      "text": "Good eveningção!"
+    },
+    {
+      "role": "assistant",
+      "text": "Sham ko namaste Renam Price ji, aap doctor se kab milna chahte hain, kaunsa din aur date suit karta hai aapko? (What day and date would you like to meet the doctor?)"
+    },
+    {
+      "role": "user",
+      "text": "I will come to tomorrow 4."
+    },
+    {
+      "role": "assistant",
+      "text": "Kal 4 baje, theek hai. Kal 4 baje kaunsa time slot suit karta hai aapko, subah, dopahar ya shaam? (Tomorrow at 4, okay. Which time slot suits you, morning, afternoon, or evening?)"
+    },
+    {
+      "role": "user",
+      "text": "Evening."
+    },
+    {
+      "role": "assistant",
+      "text": "Shaam 4 baje, noted. Aapko koi specific doctor se milna hai ya hum available doctor allocate kar sakte hain? (Evening 4 pm, noted. Do you want to meet a specific doctor or can we allocate an available doctor?)"
+    },
+    {
+      "role": "user",
+      "text": "Nicole Ebert-Reator-Send 미니-"
+    },
+    {
+      "role": "assistant",
+      "text": "Maaf kijiye Renam Price ji, aapka message thoda unclear hai. Aap kis doctor ko preference dete hain, ya hum available doctor allocate kar sakte hain? (Sorry, your message is a bit unclear. Do you have a preference for a particular doctor or can we allocate an available doctor?)"
+    },
+    {
+      "role": "user",
+      "text": "Any, doctor. Any, any."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, koi specific doctor nahi. Aapka appointment kal shaam 4 baje ke liye book kiya hai, hum aapko confirm karne ke liye kal phone karenge. (Okay, no specific doctor. Your appointment is booked for tomorrow evening at 4 pm, we'll confirm with you tomorrow.)"
+    }
+  ],
+  "transcript_text": "Thank you. Namaste, welcome to our clinic. Aapka naam kya hai? (What's your name?) Namaste, welcome to our clinic, aapka naam kya hai? RENAM PRICE Dhanyavad Renam Price ji, aapka phone number hai (your phone number is) 0987654321, aisa hi hai na? (is that correct?) I'm dear to you. Renam Price ji, aapka number caller ID se match nahi kar raha, aap apna sahi number please batayein? (Your number isn't matching the caller ID, can you please tell me your correct number?) 98 98 721 34157 Dhanyavad Renam Price ji, aap hai new patient ya pehle se hamare clinic mein aaye ho? (Are you a new patient or have you visited our clinic before?) Hello, I will visit the beginning for the first time. Aapka pehla visit hai, theek hai. Aapke visit ka reason kya hai, kis wajah se aap doctor se milna chahte hain? (This is your first visit, okay. What's the reason for your visit, why do you want to meet the doctor?) Good eveningção! Sham ko namaste Renam Price ji, aap doctor se kab milna chahte hain, kaunsa din aur date suit karta hai aapko? (What day and date would you like to meet the doctor?) I will come to tomorrow 4. Kal 4 baje, theek hai. Kal 4 baje kaunsa time slot suit karta hai aapko, subah, dopahar ya shaam? (Tomorrow at 4, okay. Which time slot suits you, morning, afternoon, or evening?) Evening. Shaam 4 baje, noted. Aapko koi specific doctor se milna hai ya hum available doctor allocate kar sakte hain? (Evening 4 pm, noted. Do you want to meet a specific doctor or can we allocate an available doctor?) Nicole Ebert-Reator-Send 미니- Maaf kijiye Renam Price ji, aapka message thoda unclear hai. Aap kis doctor ko preference dete hain, ya hum available doctor allocate kar sakte hain? (Sorry, your message is a bit unclear. Do you have a preference for a particular doctor or can we allocate an available doctor?) Any, doctor. Any, any. Theek hai, koi specific doctor nahi. Aapka appointment kal shaam 4 baje ke liye book kiya hai, hum aapko confirm karne ke liye kal phone karenge. (Okay, no specific doctor. Your appointment is booked for tomorrow evening at 4 pm, we'll confirm with you tomorrow.)",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "booked",
+    "patient_name": "Renam Price",
+    "phone_number": "989872134157",
+    "is_new_patient": true,
+    "reason_for_visit": "Not specified",
+    "preferred_date": "tomorrow",
+    "preferred_time": "evening, 4 pm",
+    "doctor_preference": "any",
+    "notes": "Patient booked an appointment for the next day at 4 pm. Confirmation call to be made the next day."
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}
