@@ -1,0 +1,151 @@
+{
+  "filename": "call_211156.json",
+  "call_sid": "CA605e4e331878f0103b806d9f15b2aa51",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-17T21:09:17.539739",
+  "call_end": "2026-04-17T21:11:56.298894",
+  "duration_seconds": 158,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, kaise ho? Aapka naam kya hai?"
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, clinic se baat ho rahi hai, aapka name kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "and I'm Christian"
+    },
+    {
+      "role": "assistant",
+      "text": "Christian ji, aapka phone number kya hai, jo caller ID pe aa raha hai?"
+    },
+    {
+      "role": "user",
+      "text": "My name is 711-34157"
+    },
+    {
+      "role": "assistant",
+      "text": "Christian ji, aapka phone number 711-34157 hai, theek hai. Kya aap hamare clinic ke naye patient hain?"
+    },
+    {
+      "role": "user",
+      "text": "Angie."
+    },
+    {
+      "role": "assistant",
+      "text": "Angie ji, aapka phone number caller ID pe match ho raha hai, ab aap naye patient hain ya pehle se hamare clinic ke patient hain?"
+    },
+    {
+      "role": "user",
+      "text": "The"
+    },
+    {
+      "role": "user",
+      "text": "Do you have a question?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka phone number 711-34157 sahi hai, lekin aapka naam Angie hai, theek? Aap hamaare clinic mein pehle se patient hain ya naye hain?"
+    },
+    {
+      "role": "user",
+      "text": "Nice."
+    },
+    {
+      "role": "assistant",
+      "text": "Aap naye patient hain ya purane, Angie ji?"
+    },
+    {
+      "role": "user",
+      "text": "Cabal Room?"
+    },
+    {
+      "role": "assistant",
+      "text": "Maaf kijiye, Angie ji, aapne kuch galat suna hai. Aapko doctor se milne ki wajah kya hai, please batayein?"
+    },
+    {
+      "role": "user",
+      "text": "So,"
+    },
+    {
+      "role": "assistant",
+      "text": "Angie ji, aapko doctor se milne ki wajah kya hai, kuch problem hai kya?"
+    },
+    {
+      "role": "user",
+      "text": "I'm having some updates..."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, Angie ji. Aapko kab appointment lena hai, kis din aur date ko pasand hai?"
+    },
+    {
+      "role": "user",
+      "text": "2 AM Oаемся"
+    },
+    {
+      "role": "assistant",
+      "text": "Maaf kijiye, Angie ji, 2 AM ka time thoda awkward hai, humare clinic ke timings morning, afternoon, aur evening hain. Aapko kaunsa time pasand hai, morning, afternoon, ya evening?"
+    },
+    {
+      "role": "user",
+      "text": "Evening."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, Angie ji. Evening mein kaunsa samay pasand hai, jaise 4 PM, 5 PM, ya 6 PM?"
+    },
+    {
+      "role": "user",
+      "text": "7 p.m."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, Angie ji, 7 PM. Aapko koi specific doctor ke saath appointment leni hai, ya hum aapko available doctor allocate kar sakte hain?"
+    },
+    {
+      "role": "user",
+      "text": "No."
+    },
+    {
+      "role": "user",
+      "text": "Go to Dr. Chaliba."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, Angie ji, Dr. Chaliba ke saath 7 PM par appointment book kiya hai. Hum aapko confirmation call karenge, dhanyavad!"
+    }
+  ],
+  "transcript_text": "Thank you. Namaste, kaise ho? Aapka naam kya hai? Namaste, clinic se baat ho rahi hai, aapka name kya hai? and I'm Christian Christian ji, aapka phone number kya hai, jo caller ID pe aa raha hai? My name is 711-34157 Christian ji, aapka phone number 711-34157 hai, theek hai. Kya aap hamare clinic ke naye patient hain? Angie. Angie ji, aapka phone number caller ID pe match ho raha hai, ab aap naye patient hain ya pehle se hamare clinic ke patient hain? The Do you have a question? Aapka phone number 711-34157 sahi hai, lekin aapka naam Angie hai, theek? Aap hamaare clinic mein pehle se patient hain ya naye hain? Nice. Aap naye patient hain ya purane, Angie ji? Cabal Room? Maaf kijiye, Angie ji, aapne kuch galat suna hai. Aapko doctor se milne ki wajah kya hai, please batayein? So, Angie ji, aapko doctor se milne ki wajah kya hai, kuch problem hai kya? I'm having some updates... Theek hai, Angie ji. Aapko kab appointment lena hai, kis din aur date ko pasand hai? 2 AM Oаемся Maaf kijiye, Angie ji, 2 AM ka time thoda awkward hai, humare clinic ke timings morning, afternoon, aur evening hain. Aapko kaunsa time pasand hai, morning, afternoon, ya evening? Evening. Theek hai, Angie ji. Evening mein kaunsa samay pasand hai, jaise 4 PM, 5 PM, ya 6 PM? 7 p.m. Theek hai, Angie ji, 7 PM. Aapko koi specific doctor ke saath appointment leni hai, ya hum aapko available doctor allocate kar sakte hain? No. Go to Dr. Chaliba. Theek hai, Angie ji, Dr. Chaliba ke saath 7 PM par appointment book kiya hai. Hum aapko confirmation call karenge, dhanyavad!",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "booked",
+    "patient_name": "Angie",
+    "phone_number": "711-34157",
+    "is_new_patient": true,
+    "reason_for_visit": "updates",
+    "preferred_date": null,
+    "preferred_time": "7 PM",
+    "doctor_preference": "Dr. Chaliba",
+    "notes": "Patient booked an appointment with Dr. Chaliba for 7 PM"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": null,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}

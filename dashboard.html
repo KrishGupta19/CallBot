@@ -161,6 +161,7 @@
                     <button data-tab="transcript" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Transcript</button>
                     <button data-tab="raw" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Raw JSON</button>
                     <button data-tab="audio" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Audio</button>
+                    <button data-tab="details" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Details</button>
                 </div>
             </div>
 
@@ -356,6 +357,8 @@
                 summary?.follow_up_action ?? "",
                 sentiment,
                 transcriptText,
+                raw?.business_type ?? "",
+                raw?.intake ? JSON.stringify(raw.intake) : "",
             ].join("\n").toLowerCase();
 
             return {
@@ -746,11 +749,25 @@
                         <div class="mt-1 text-sm text-slate-500">Your <code>/calls</code> logs don’t include an audio URL yet. If you later add <code>recording_url</code> to the log JSON, this tab will start playing it automatically.</div>
                    </div>`;
 
+            const intake = call.raw?.intake ?? null;
+            const businessType = (call.raw?.business_type ?? "unknown").toString();
+            const detailsHtml = intake
+                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="font-bold text-slate-900">Captured details</div>
+                        <div class="mt-1 text-sm text-slate-500">Business: <span class="font-semibold text-slate-700">${escapeHtml(businessType)}</span></div>
+                        <pre class="mt-4 whitespace-pre-wrap break-words text-xs bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 overflow-auto no-scrollbar">${escapeHtml(JSON.stringify(intake, null, 2))}</pre>
+                   </div>`
+                : `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                        <div class="font-bold text-slate-900">No details captured</div>
+                        <div class="mt-1 text-sm text-slate-500">Place a new call, choose doctor/bakery in IVR, and complete the questions to see structured details here.</div>
+                   </div>`;
+
             let html = "";
             if (state.selectedTab === "summary") html = summaryHtml;
             else if (state.selectedTab === "transcript") html = transcriptHtml;
             else if (state.selectedTab === "raw") html = rawHtml;
             else if (state.selectedTab === "audio") html = audioHtml;
+            else if (state.selectedTab === "details") html = detailsHtml;
             else html = summaryHtml;
 
             els.callDetail.innerHTML = html;

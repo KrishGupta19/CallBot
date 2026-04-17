@@ -5,6 +5,7 @@ from pathlib import Path
 
 from dotenv import load_dotenv
 from loguru import logger
+from groq import Groq
 
 from pipecat.pipeline.pipeline import Pipeline
 from pipecat.pipeline.runner import PipelineRunner
@@ -42,6 +43,106 @@ from pipecat.processors.frame_processor import FrameProcessor
 
 load_dotenv()
 
+BOT_PROFILES = {
+    "doctor": {
+        "label": "Doctor appointments",
+        "system_prompt": """You are a clinic receptionist for a doctor.
+You speak naturally in Hinglish (Hindi + English).
+
+Goal: book an appointment or mark as needs-callback.
+
+Collect these details by asking short, one-at-a-time questions:
+- patient_name
+- phone_number (confirm if it matches caller ID; if not, ask)
+- is_new_patient (yes/no)
+- reason_for_visit (1 sentence)
+- preferred_date (ask for day + date)
+- preferred_time (morning/afternoon/evening + exact time if possible)
+- doctor_preference (if any)
+
+Rules:
+- If symptoms sound urgent/emergency, tell them to seek urgent medical care immediately and mark outcome as "emergency_redirect".
+- Keep responses 1-2 lines. Be polite and efficient.
+""",
+        "intake_schema_hint": """Return JSON with:
+business_type="doctor"
+outcome: one of ["booked","needs_callback","emergency_redirect","unknown"]
+patient_name, phone_number, is_new_patient, reason_for_visit, preferred_date, preferred_time, doctor_preference
+notes (string)
+""",
+    },
+    "bakery": {
+        "label": "Bakery orders",
+        "system_prompt": """You are a bakery ordering assistant.
+You speak naturally in Hinglish (Hindi + English).
+
+Goal: confirm a bakery order or mark as needs-callback.
+
+Collect these details by asking short, one-at-a-time questions:
+- customer_name
+- phone_number (confirm if it matches caller ID; if not, ask)
+- items (what they want)
+- quantity
+- pickup_or_delivery ("pickup" or "delivery")
+- desired_date
+- desired_time
+- address (only if delivery)
+- special_instructions
+
+Rules:
+- Keep responses 1-2 lines. Confirm the order summary before ending.
+""",
+        "intake_schema_hint": """Return JSON with:
+business_type="bakery"
+outcome: one of ["order_confirmed","needs_callback","unknown"]
+customer_name, phone_number, items, quantity, pickup_or_delivery, desired_date, desired_time, address, special_instructions
+notes (string)
+""",
+    },
+}
+
+
+async def extract_intake(business_type: str | None, transcript_text: str) -> dict | None:
+    bt = (business_type or "").strip().lower()
+    profile = BOT_PROFILES.get(bt)
+    if not profile:
+        return None
+    if not transcript_text.strip():
+        return {"business_type": bt, "outcome": "unknown", "notes": "Empty transcript"}
+
+    prompt = f"""You extract structured intake details from a phone call transcript.
+Return ONLY valid JSON. No markdown.
+
+{profile["intake_schema_hint"]}
+
+Transcript:
+{transcript_text}
+"""
+
+    def _run():
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        # Use a broadly available Groq model; keep it stable.
+        resp = client.chat.completions.create(
+            model=os.getenv("GROQ_SUMMARY_MODEL") or "llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You output strict JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=400,
+            response_format={"type": "json_object"},
+        )
+        content = (resp.choices[0].message.content or "").strip()
+        return json.loads(content)
+
+    try:
+        import asyncio
+
+        return await asyncio.to_thread(_run)
+    except Exception as e:
+        logger.warning(f"Intake extraction failed: {e}")
+        return None
+
 
 # ---------------- TRANSCRIPT LOGGER ---------------- #
 class TranscriptLogger(FrameProcessor):
@@ -71,7 +172,15 @@ class TranscriptLogger(FrameProcessor):
 
 
 # ---------------- SAVE ---------------- #
-async def save_call(tracker, *, call_start: datetime | None, call_end: datetime | None, caller_number: str | None, call_sid: str | None):
+async def save_call(
+    tracker,
+    *,
+    call_start: datetime | None,
+    call_end: datetime | None,
+    caller_number: str | None,
+    call_sid: str | None,
+    business_type: str | None,
+):
     logs = Path("call_logs")
     logs.mkdir(exist_ok=True)
 
@@ -87,15 +196,19 @@ async def save_call(tracker, *, call_start: datetime | None, call_end: datetime 
     transcript = tracker if isinstance(tracker, list) else []
     transcript_text = " ".join([(t.get("text") or "").strip() for t in transcript if isinstance(t, dict)]).strip()
 
+    intake = await extract_intake(business_type, transcript_text)
+
     payload = {
         "filename": file.name,
         "call_sid": call_sid,
         "caller_number": caller_number,
+        "business_type": business_type,
         "call_start": start_iso,
         "call_end": end_iso,
         "duration_seconds": duration_seconds,
         "transcript": transcript,
         "transcript_text": transcript_text,
+        "intake": intake,
         "summary": {
             "caller_name": None,
             "interest": None,
@@ -114,7 +227,13 @@ async def save_call(tracker, *, call_start: datetime | None, call_end: datetime 
 
 
 # ---------------- MAIN BOT ---------------- #
-async def run_bot(websocket, stream_sid: str, call_sid: str = None, caller_number: str = None):
+async def run_bot(
+    websocket,
+    stream_sid: str,
+    call_sid: str = None,
+    caller_number: str = None,
+    business_type: str = None,
+):
 
     # -------- TRANSPORT -------- #
     # NOTE: vad_enabled/vad_analyzer do NOT exist in FastAPIWebsocketParams
@@ -151,24 +270,14 @@ async def run_bot(websocket, stream_sid: str, call_sid: str = None, caller_numbe
     )
 
     # -------- PROMPT -------- #
-    messages = [{
-        "role": "system",
-        "content": """You are a friendly and professional AI sales assistant for VCare Techs,
-an AI-powered sales and support automation company.
-
-You speak naturally in Hinglish — mixing Hindi and English the way people
-naturally talk in urban India.
-
-YOUR JOB ON THIS CALL:
-1. Greet the caller warmly.
-2. Ask name
-3. Ask service interest
-4. Ask budget
-5. Ask timeline
-6. Close politely
-
-Keep responses SHORT (1-2 lines)."""
-    }]
+    bt = (business_type or "").strip().lower()
+    profile = BOT_PROFILES.get(bt) or BOT_PROFILES["doctor"]
+    messages = [
+        {
+            "role": "system",
+            "content": profile["system_prompt"],
+        }
+    ]
 
     context = LLMContext(messages)
 
@@ -236,6 +345,7 @@ Keep responses SHORT (1-2 lines)."""
             call_end=call_end_dt,
             caller_number=caller_number,
             call_sid=call_sid,
+            business_type=bt,
         )
         await task.queue_frames([EndFrame()])
 

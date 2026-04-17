@@ -55,6 +55,7 @@ async def get_calls():
                         "call_end": None,
                         "duration_seconds": None,
                         "caller_number": None,
+                        "business_type": "unknown",
                         "transcript": call_data,
                         "transcript_text": " ".join(
                             [
@@ -63,6 +64,7 @@ async def get_calls():
                                 if isinstance(t, dict)
                             ]
                         ).strip(),
+                        "intake": None,
                         "summary": {
                             "caller_name": None,
                             "interest": None,
@@ -78,6 +80,8 @@ async def get_calls():
                 )
             else:
                 call_data["filename"] = filepath.name
+                call_data.setdefault("business_type", "unknown")
+                call_data.setdefault("intake", None)
                 calls.append(call_data)
         except Exception as e:
             logger.error(f"Failed to read {filepath}: {e}")
@@ -111,22 +115,57 @@ async def dashboard_slash():
 async def incoming_call(request: Request):
     """
     Twilio hits this endpoint when someone calls your number.
-    We return TwiML telling Twilio to stream audio to our WebSocket.
+    We return TwiML with a simple IVR menu:
+    - Press 1 for doctor appointments
+    - Press 2 for bakery orders
     """
     form_data = await request.form()
     caller_number = form_data.get("From", "unknown")
     logger.info(f"Incoming call from: {caller_number}")
 
-    # Return the TwiML instructions directly
+    base_url = f"https://{NGROK_URL}" if NGROK_URL else ""
+    route_url = f"{base_url}/route-call" if base_url else "/route-call"
+
+    # Return the IVR menu
+    twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Gather input="dtmf" numDigits="1" timeout="7" action="{route_url}" method="POST">
+        <Say voice="alice">Welcome. For doctor appointments, press 1. For bakery orders, press 2.</Say>
+    </Gather>
+    <Say voice="alice">Sorry, I did not receive your selection.</Say>
+    <Redirect method="POST">/incoming-call</Redirect>
+</Response>"""
+
+    return PlainTextResponse(content=twiml, media_type="application/xml")
+
+
+@app.post("/route-call")
+async def route_call(request: Request):
+    """Handle IVR digit and start streaming to /ws with business_type."""
+    form_data = await request.form()
+    digits = (form_data.get("Digits") or "").strip()
+    caller_number = form_data.get("From", "unknown")
+
+    business_type = "doctor" if digits == "1" else "bakery" if digits == "2" else "unknown"
+    logger.info(f"IVR selection digits={digits!r} -> business_type={business_type} caller={caller_number}")
+
+    if business_type == "unknown":
+        twiml = """<?xml version="1.0" encoding="UTF-8"?>
+<Response>
+    <Say voice="alice">Invalid selection.</Say>
+    <Redirect method="POST">/incoming-call</Redirect>
+</Response>"""
+        return PlainTextResponse(content=twiml, media_type="application/xml")
+
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
     <Connect>
         <Stream url="wss://{NGROK_URL}/ws">
             <Parameter name="caller_number" value="{caller_number}" />
+            <Parameter name="business_type" value="{business_type}" />
         </Stream>
     </Connect>
 </Response>"""
-
     return PlainTextResponse(content=twiml, media_type="application/xml")
 
 
@@ -139,6 +178,7 @@ async def websocket_endpoint(websocket: WebSocket):
     stream_sid = None
     call_sid = None
     caller_number = None
+    business_type = None
     try:
         async for message in websocket.iter_text():
             data = json.loads(message)
@@ -151,6 +191,7 @@ async def websocket_endpoint(websocket: WebSocket):
                 call_sid = data["start"].get("callSid")
                 custom = data["start"].get("customParameters") or {}
                 caller_number = custom.get("caller_number") or custom.get("From") or None
+                business_type = custom.get("business_type") or None
                 logger.info(f"Stream started: stream_sid={stream_sid}, call_sid={call_sid}")
                 break
     except Exception as e:
@@ -165,7 +206,7 @@ async def websocket_endpoint(websocket: WebSocket):
 
     try:
         from bot import run_bot
-        await run_bot(websocket, stream_sid, call_sid, caller_number)
+        await run_bot(websocket, stream_sid, call_sid, caller_number, business_type)
     except asyncio.CancelledError:
         logger.info("Call cancelled (caller hung up)")
     except ConnectionError as e:
