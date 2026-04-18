@@ -1,0 +1,74 @@
+{
+  "filename": "call_134034.json",
+  "call_sid": "CAe48458ed045372cccc2b3737eac6d48f",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-18T13:39:56.329661",
+  "call_end": "2026-04-18T13:40:34.193969",
+  "duration_seconds": 37,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapko kaisa lag raha hai is din (How are you doing today)?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aapka swagat hai. Kripya apna naam batayen, ji. (Hello, please tell me your name)"
+    },
+    {
+      "role": "user",
+      "text": "Fine."
+    },
+    {
+      "role": "assistant",
+      "text": "Kya aapke name kaun hai, ji (What is your name)?"
+    },
+    {
+      "role": "user",
+      "text": "fish"
+    },
+    {
+      "role": "assistant",
+      "text": "Aur aapka phonenumber kya hai, ji? (And what's your phone number, ji?)"
+    },
+    {
+      "role": "user",
+      "text": "Maybe we don't want to."
+    },
+    {
+      "role": "assistant",
+      "text": "Achha, let me check the caller ID, aapka number toh yahaan dikhai deta hai (Okay, let me check the caller ID, your number is showing up on our end)."
+    }
+  ],
+  "transcript_text": "Thank you. Aapko kaisa lag raha hai is din (How are you doing today)? Aapka swagat hai. Kripya apna naam batayen, ji. (Hello, please tell me your name) Fine. Kya aapke name kaun hai, ji (What is your name)? fish Aur aapka phonenumber kya hai, ji? (And what's your phone number, ji?) Maybe we don't want to. Achha, let me check the caller ID, aapka number toh yahaan dikhai deta hai (Okay, let me check the caller ID, your number is showing up on our end).",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": "Fish",
+    "phone_number": "unknown",
+    "is_new_patient": "unknown",
+    "reason_for_visit": "unknown",
+    "preferred_date": "unknown",
+    "preferred_time": "unknown",
+    "doctor_preference": "unknown",
+    "notes": "Patient hesitant to provide phone number, number retrieved from caller ID but not disclosed in transcript"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  },
+  "recording_sid": "REc735e35a9a1449e8e4f5f8e1fd831059",
+  "recording_url": "/recordings/REc735e35a9a1449e8e4f5f8e1fd831059.mp3",
+  "recording_status": "completed"
+}

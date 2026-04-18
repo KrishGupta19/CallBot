@@ -22,6 +22,7 @@ from pipecat.turns.user_stop import SpeechTimeoutUserTurnStopStrategy
 from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.groq.stt import GroqSTTService
 from pipecat.services.cartesia.tts import CartesiaTTSService
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
@@ -41,7 +42,12 @@ from pipecat.frames.frames import (
 )
 from pipecat.processors.frame_processor import FrameProcessor
 
-load_dotenv()
+load_dotenv(override=True)
+
+FAST_LLM_MODEL = os.getenv("GROQ_LLM_MODEL") or "llama-3.1-8b-instant"
+FAST_STT_MODEL = os.getenv("GROQ_STT_MODEL") or "whisper-large-v3-turbo"
+USER_SPEECH_STOP_SECS = float(os.getenv("USER_SPEECH_STOP_SECS", "0.6"))
+USER_TURN_TIMEOUT_SECS = float(os.getenv("USER_TURN_TIMEOUT_SECS", "0.35"))
 
 BOT_PROFILES = {
     "doctor": {
@@ -288,12 +294,12 @@ async def run_bot(
     # -------- SERVICES -------- #
     stt = GroqSTTService(
         api_key=os.getenv("GROQ_API_KEY"),
-        settings=GroqSTTService.Settings(model="whisper-large-v3-turbo"),
+        settings=GroqSTTService.Settings(model=FAST_STT_MODEL),
     )
 
     llm = GroqLLMService(
         api_key=os.getenv("GROQ_API_KEY"),
-        model="llama-3.3-70b-versatile",
+        model=FAST_LLM_MODEL,
         temperature=0.3,
         max_tokens=60,
     )
@@ -303,6 +309,25 @@ async def run_bot(
         voice_id="a0e99841-438c-4a64-b679-ae501e7d6091",
         sample_rate=8000,  # Must match Twilio's 8000 Hz
     )
+    # Read TTS env values at runtime so .env edits apply after restart.
+    tts_provider = (os.getenv("TTS_PROVIDER") or "").strip().lower()
+    elevenlabs_api_key = (os.getenv("ELEVENLABS_API_KEY") or "").strip()
+    elevenlabs_voice_id = (os.getenv("ELEVENLABS_VOICE_ID") or "").strip()
+    elevenlabs_model = (os.getenv("ELEVENLABS_MODEL") or "").strip() or None
+
+    # Prefer ElevenLabs when configured, unless explicitly overridden.
+    provider = tts_provider or ("elevenlabs" if elevenlabs_api_key else "cartesia")
+    if provider == "elevenlabs":
+        if not elevenlabs_api_key:
+            raise RuntimeError("TTS_PROVIDER=elevenlabs but ELEVENLABS_API_KEY is missing")
+        if not elevenlabs_voice_id:
+            raise RuntimeError("TTS_PROVIDER=elevenlabs but ELEVENLABS_VOICE_ID is missing")
+        tts = ElevenLabsTTSService(
+            api_key=elevenlabs_api_key,
+            voice_id=elevenlabs_voice_id,
+            model=elevenlabs_model,
+            sample_rate=8000,  # Must match Twilio's 8000 Hz
+        )
 
     # -------- PROMPT -------- #
     bt = (business_type or "").strip().lower()
@@ -323,11 +348,12 @@ async def run_bot(
         user_params=LLMUserAggregatorParams(
             vad_analyzer=SileroVADAnalyzer(
                 sample_rate=8000,
-                params=VADParams(stop_secs=1.5),
+                # Lower stop threshold reduces dead-air before the bot responds.
+                params=VADParams(stop_secs=USER_SPEECH_STOP_SECS),
             ),
             user_turn_strategies=UserTurnStrategies(
                 start=default_user_turn_start_strategies(),
-                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=0.8)],
+                stop=[SpeechTimeoutUserTurnStopStrategy(user_speech_timeout=USER_TURN_TIMEOUT_SECS)],
             ),
         ),
     )

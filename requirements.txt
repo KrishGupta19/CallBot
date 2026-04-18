@@ -1,4 +1,4 @@
-pipecat-ai[silero,groq,cartesia,twilio]
+pipecat-ai[silero,groq,cartesia,elevenlabs,twilio]
 fastapi==0.111.0
 python-multipart
 uvicorn==0.30.1

@@ -17,7 +17,7 @@ from fastapi.responses import PlainTextResponse, HTMLResponse
 from fastapi.responses import Response, StreamingResponse
 from twilio.rest import Client as TwilioClient
 
-load_dotenv()
+load_dotenv(override=True)
 
 # Configure logging
 try:
@@ -139,7 +139,11 @@ async def get_calls():
     
     recordings_index = _load_recordings_index()
     calls = []
-    for filepath in sorted(logs_dir.glob("call_*.json"), reverse=True)[:20]:
+    for filepath in sorted(
+        logs_dir.glob("call_*.json"),
+        key=lambda p: p.stat().st_mtime,
+        reverse=True,
+    )[:20]:
         try:
             call_data = json.loads(filepath.read_text(encoding="utf-8"))
             if isinstance(call_data, list):
