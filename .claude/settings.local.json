@@ -4,7 +4,10 @@
       "Bash(pip show *)",
       "Bash(python -c \"from pipecat.frames.frames import TranscriptionFrame; print\\('OK'\\)\")",
       "Bash(python -c \"from pipecat.processors.aggregators.llm_response_universal import LLMContextAggregatorPair; print\\('OK'\\)\")",
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(venv/Scripts/python.exe -c \"import pipecat; print\\(pipecat.__version__\\)\")",
+      "Bash(venv/Scripts/python.exe -c \"from bot import run_bot; print\\('Import OK'\\)\")",
+      "Bash(venv/Scripts/python.exe -c ' *)"
     ]
   }
 }

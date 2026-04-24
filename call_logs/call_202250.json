@@ -1,0 +1,30 @@
+{
+  "filename": "call_202250.json",
+  "call_sid": "CA7a7ff334cf6d15f78425ff798ecd20a1",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-24T20:22:11.325624",
+  "call_end": "2026-04-24T20:22:50.678404",
+  "duration_seconds": 39,
+  "transcript": [],
+  "transcript_text": "",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "notes": "Empty transcript"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": "No transcript captured. Call disconnected early.",
+    "follow_up_action": "callback_required"
+  },
+  "recording_sid": "RE934f7a794d644c6f869ad2b6ecf53670",
+  "recording_url": "/recordings/RE934f7a794d644c6f869ad2b6ecf53670.mp3",
+  "recording_status": "completed"
+}

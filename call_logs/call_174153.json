@@ -1,0 +1,27 @@
+{
+  "filename": "call_174153.json",
+  "call_sid": "CA488086357f36617bf5df79f7743be3d2",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-18T17:41:52.813141",
+  "call_end": "2026-04-18T17:41:53.224060",
+  "duration_seconds": 0,
+  "transcript": [],
+  "transcript_text": "",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "notes": "Empty transcript"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": null,
+    "follow_up_action": null
+  }
+}

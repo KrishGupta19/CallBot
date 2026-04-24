@@ -379,6 +379,7 @@ async def route_call(request: Request):
     form_data = await request.form()
     digits = (form_data.get("Digits") or "").strip()
     caller_number = form_data.get("From", "unknown")
+    call_sid = (form_data.get("CallSid") or "").strip()
 
     business_type = "doctor" if digits == "1" else "bakery" if digits == "2" else "unknown"
     logger.info(f"IVR selection digits={digits!r} -> business_type={business_type} caller={caller_number}")
@@ -395,6 +396,10 @@ async def route_call(request: Request):
         return PlainTextResponse(content=twiml, media_type="application/xml")
 
     recording_status_url = f"{public_base}/recording-status"
+    # Start recording as early as possible after IVR selection.
+    # Starting here avoids delays from websocket/bot initialization.
+    if call_sid:
+        asyncio.create_task(_start_twilio_recording(call_sid, callback_url=recording_status_url))
 
     twiml = f"""<?xml version="1.0" encoding="UTF-8"?>
 <Response>
@@ -563,15 +568,6 @@ async def websocket_endpoint(websocket: WebSocket):
         logger.error("Never received Twilio stream_sid, closing connection")
         await websocket.close()
         return
-
-    # Kick off call recording (REST API). This is more reliable than TwiML Start/Record
-    # for <Connect><Stream> flows.
-    if call_sid:
-        callback_url = f"https://{NGROK_URL}/recording-status" if NGROK_URL else ""
-        if callback_url:
-            asyncio.create_task(_start_twilio_recording(call_sid, callback_url=callback_url))
-        else:
-            logger.warning("NGROK_URL not set; cannot construct recording-status callback URL")
 
     try:
         from bot import run_bot

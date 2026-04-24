@@ -1,0 +1,82 @@
+{
+  "filename": "call_210526.json",
+  "call_sid": "CA4b1c01f8314dfc299a28e5e25197b48f",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-24T21:04:08.199037",
+  "call_end": "2026-04-24T21:05:26.862608",
+  "duration_seconds": 78,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon?"
+    },
+    {
+      "role": "user",
+      "text": "I'll take an appointment with a doctor."
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, shukriya. Aapke naam kya hain, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Chris Butta."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, note kar liya. Aapka contact phone number dene me kuch samay do. Kya numbar hain aapka, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "My number is 9831. Please,"
+    },
+    {
+      "role": "user",
+      "text": "I think they make sense."
+    },
+    {
+      "role": "assistant",
+      "text": "Chalo, theek hai. Aap Dr. Sharma ke clinic mein new ho ya returning patient, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "My new creation tool."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapki description samajh nahi a rahi. Kripya thoda clear karein. Aap Dr. Sharma ke clinic aayenge kyunki aapka koi saath karte hue problem aa raha hai ya koi vishisht kaam karne ke liye aye hain, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "My repeat my third door."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapki baat samajh nahi a rahi hai. Kripya thoda clear karein. Aapko fir se poochhna hai, aap Dr. Sharma ke clinic mein new patient ho ya returning patient, Ji? \n\n(Agla prashn aur pehle ki tarah kiye, kai baar poochna hai na hai, to phir ek last baar koi aur tarika nahi hai.)"
+    }
+  ],
+  "transcript_text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon? I'll take an appointment with a doctor. Theek hai, shukriya. Aapke naam kya hain, Ji? My name is Chris Butta. Ji, note kar liya. Aapka contact phone number dene me kuch samay do. Kya numbar hain aapka, Ji? My number is 9831. Please, I think they make sense. Chalo, theek hai. Aap Dr. Sharma ke clinic mein new ho ya returning patient, Ji? My new creation tool. Aapki description samajh nahi a rahi. Kripya thoda clear karein. Aap Dr. Sharma ke clinic aayenge kyunki aapka koi saath karte hue problem aa raha hai ya koi vishisht kaam karne ke liye aye hain, Ji? My repeat my third door. Aapki baat samajh nahi a rahi hai. Kripya thoda clear karein. Aapko fir se poochhna hai, aap Dr. Sharma ke clinic mein new patient ho ya returning patient, Ji? \n\n(Agla prashn aur pehle ki tarah kiye, kai baar poochna hai na hai, to phir ek last baar koi aur tarika nahi hai.)",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": "Chris Butta",
+    "phone_number": "9831",
+    "is_new_patient": null,
+    "reason_for_visit": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": null,
+    "notes": "The patient, Chris Butta, called to book an appointment but the conversation was unclear and incomplete."
+  },
+  "summary": {
+    "caller_name": "Chris Butta",
+    "lead_score": 1,
+    "sentiment": "neutral",
+    "summary": "The caller, Chris Butta, contacted Dr. Sharma's clinic to schedule an appointment. The clinic staff attempted to collect the caller's information, including their name and contact number, but struggled to understand the purpose of the visit due to communication difficulties. The outcome was inconclusive as the staff had to repeatedly ask for clarification.",
+    "follow_up_action": null
+  },
+  "recording_sid": "REc5bf80c7cf148307a31f6d584d0b9a43",
+  "recording_url": "/recordings/REc5bf80c7cf148307a31f6d584d0b9a43.mp3",
+  "recording_status": "completed"
+}

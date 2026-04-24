@@ -1,1058 +1,962 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Voice Agent Dashboard</title>
+    <title>CallBot Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
-        /* Tailwind CDN doesn't ship line-clamp by default */
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .no-scrollbar::-webkit-scrollbar {
-            width: 0px;
-            height: 0px;
-        }
-
-        .no-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        :root {
-            --sidebar-w: 380px;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        * { font-family: 'Inter', sans-serif; }
+        .line-clamp-2 { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .no-scrollbar::-webkit-scrollbar { width:0; height:0; }
+        .no-scrollbar { -ms-overflow-style:none; scrollbar-width:none; }
+        :root { --sidebar-w: 360px; }
+        .sidebar-bg { background: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%); }
+        .card-hover { transition: all 0.15s ease; }
+        .card-hover:hover { transform: translateY(-1px); box-shadow: 0 8px 25px -5px rgba(0,0,0,0.12); }
+        .tab-active { background: linear-gradient(135deg, #6366f1, #8b5cf6); color: white; border-color: transparent; }
+        .sentiment-positive { color: #10b981; }
+        .sentiment-negative { color: #ef4444; }
+        .sentiment-neutral { color: #f59e0b; }
+        .sentiment-unknown { color: #94a3b8; }
+        .lead-bar { background: linear-gradient(90deg, #6366f1, #8b5cf6); border-radius: 4px; height: 6px; }
+        .pulse-dot { animation: pulse-anim 2s infinite; }
+        @keyframes pulse-anim { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+        .glass { background: rgba(255,255,255,0.05); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.1); }
     </style>
 </head>
+<body class="bg-slate-100 h-screen overflow-hidden">
+<div class="h-full flex overflow-hidden">
 
-<body class="bg-slate-100 h-screen overflow-hidden font-sans">
+    <!-- ═══════════════ SIDEBAR ═══════════════ -->
+    <aside id="sidebar" class="sidebar-bg h-full flex flex-col z-20 shrink-0 shadow-2xl" style="width:var(--sidebar-w);">
 
-    <div class="h-full flex overflow-hidden">
-        <!-- Sidebar / Call List -->
-        <aside id="sidebar"
-            class="h-full bg-white border-r border-slate-200 flex flex-col shadow-sm z-20 shrink-0"
-            style="width: var(--sidebar-w);">
-            <div class="p-4 border-b border-slate-200 bg-white/80 backdrop-blur">
-                <div class="flex items-center justify-between gap-3">
-                    <div class="flex items-center gap-2">
-                        <div class="h-9 w-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
-                            <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5" aria-hidden="true">
-                                <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" />
-                            </svg>
-                        </div>
-                        <div>
-                            <h1 class="text-base font-bold text-slate-900 leading-tight">Call Dashboard</h1>
-                            <div class="text-xs text-slate-500" id="sidebar-subtitle">Loading…</div>
-                        </div>
-                    </div>
-                    <button id="btn-refresh"
-                        class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 active:bg-slate-900">
-                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-                            <path
-                                d="M20 12a8 8 0 10-2.34 5.66M20 12v6m0-6h-6"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" />
+        <!-- Brand header -->
+        <div class="p-5 border-b border-white/10">
+            <div class="flex items-center justify-between gap-3">
+                <div class="flex items-center gap-3">
+                    <div class="h-9 w-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5 text-white">
+                            <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07A19.5 19.5 0 013.7 10.77 19.8 19.8 0 01.67 2.18 2 2 0 012.64 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.12 6.12l.97-.97a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
                         </svg>
-                        Refresh
-                    </button>
-                </div>
-
-                <div class="mt-3 flex items-center gap-2">
-                    <div class="relative flex-1">
-                        <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
-                            <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4" aria-hidden="true">
-                                <path
-                                    d="M11 19a8 8 0 100-16 8 8 0 000 16z"
-                                    stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                    stroke-linejoin="round" />
-                                <path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2"
-                                    stroke-linecap="round" stroke-linejoin="round" />
-                            </svg>
-                        </div>
-                        <input id="search"
-                            class="w-full rounded-lg border border-slate-200 bg-slate-50 pl-9 pr-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/15 focus:border-slate-300"
-                            placeholder="Search calls, summaries, transcript…" />
                     </div>
-                    <button id="btn-filters"
-                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                        Filters
-                    </button>
-                </div>
-
-                <div class="mt-3 flex items-center justify-between gap-2">
-                    <div class="flex items-center gap-2">
-                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 select-none">
-                            <input id="auto-refresh" type="checkbox"
-                                class="h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900/20" />
-                            Auto-refresh
-                        </label>
-                        <select id="auto-refresh-interval"
-                            class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/15">
-                            <option value="10000">10s</option>
-                            <option value="30000" selected>30s</option>
-                            <option value="60000">60s</option>
-                        </select>
-                        <span id="new-calls-pill"
-                            class="hidden rounded-full bg-emerald-50 text-emerald-700 px-2 py-1 text-xs font-semibold border border-emerald-200">
-                            New calls
-                        </span>
+                    <div>
+                        <h1 class="text-sm font-bold text-white leading-tight">CallBot</h1>
+                        <div class="text-[10px] text-indigo-300 font-medium" id="sidebar-subtitle">Loading…</div>
                     </div>
-                    <select id="sort"
-                        class="rounded-lg border border-slate-200 bg-white px-2 py-2 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-slate-900/15">
-                        <option value="newest" selected>Newest</option>
-                        <option value="oldest">Oldest</option>
-                        <option value="lead_score_desc">Lead score ↓</option>
-                        <option value="lead_score_asc">Lead score ↑</option>
-                    </select>
                 </div>
-            </div>
-
-            <div id="call-list" class="flex-1 overflow-y-auto p-3 space-y-2 bg-slate-50">
-                <!-- filled by JS -->
-            </div>
-
-            <div class="p-3 border-t border-slate-200 bg-white flex items-center justify-between gap-2">
-                <button id="btn-export-csv"
-                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                    Export CSV
-                </button>
-                <button id="btn-export-excel"
-                    class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50">
-                    Export Excel
-                </button>
-                <button id="btn-export-json"
-                    class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-semibold text-white shadow-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                    disabled>
-                    Export call JSON
+                <button id="btn-refresh" class="glass rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 transition flex items-center gap-1.5">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5"><path d="M20 12a8 8 0 10-2.34 5.66M20 12v6m0-6h-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    Refresh
                 </button>
             </div>
-        </aside>
 
-        <!-- Resize handle -->
-        <div id="sidebar-resizer" class="w-1 bg-slate-200 hover:bg-slate-300 cursor-col-resize"></div>
-
-        <!-- Main -->
-        <main class="flex-1 flex flex-col h-full overflow-hidden">
-            <div class="p-4 border-b border-slate-200 bg-white/80 backdrop-blur z-10">
-                <div class="flex items-start justify-between gap-4">
-                    <div>
-                        <h2 class="text-lg font-bold text-slate-900" id="detail-title">Select a call</h2>
-                        <div class="text-sm text-slate-500" id="detail-date"></div>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <button id="btn-copy-summary"
-                            class="hidden rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                            Copy summary
-                        </button>
-                    </div>
+            <!-- Search -->
+            <div class="mt-4 relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M11 19a8 8 0 100-16 8 8 0 000 16z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 </div>
-
-                <!-- Analytics -->
-                <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3" id="analytics">
-                    <!-- filled by JS -->
-                </div>
-
-                <!-- Tabs -->
-                <div class="mt-4 flex items-center gap-2">
-                    <button data-tab="summary" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-slate-900 text-white">Summary</button>
-                    <button data-tab="transcript" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Transcript</button>
-                    <button data-tab="raw" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Raw JSON</button>
-                    <button data-tab="audio" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Audio</button>
-                    <button data-tab="details" class="tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50">Details</button>
-                </div>
+                <input id="search" class="w-full rounded-xl bg-white/10 border border-white/10 pl-9 pr-3 py-2.5 text-sm text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 focus:border-indigo-400/50" placeholder="Search calls…"/>
             </div>
 
-            <div id="call-detail" class="flex-1 overflow-y-auto p-5 lg:p-8 bg-slate-50">
-                <!-- filled by JS -->
+            <!-- Controls row -->
+            <div class="mt-3 flex items-center gap-2">
+                <button id="btn-filters" class="glass rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 transition">Filters</button>
+                <label class="glass rounded-lg px-3 py-1.5 text-xs font-semibold text-white flex items-center gap-1.5 cursor-pointer hover:bg-white/10 transition">
+                    <input id="auto-refresh" type="checkbox" class="h-3.5 w-3.5 rounded"/>
+                    Live
+                    <span id="live-dot" class="hidden h-1.5 w-1.5 rounded-full bg-green-400 pulse-dot"></span>
+                </label>
+                <select id="auto-refresh-interval" class="glass rounded-lg px-2 py-1.5 text-xs font-semibold text-white bg-transparent focus:outline-none">
+                    <option value="10000">10s</option>
+                    <option value="30000" selected>30s</option>
+                    <option value="60000">60s</option>
+                </select>
+                <select id="sort" class="ml-auto glass rounded-lg px-2 py-1.5 text-xs font-semibold text-white bg-transparent focus:outline-none">
+                    <option value="newest" selected>Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="lead_score_desc">Lead ↓</option>
+                    <option value="lead_score_asc">Lead ↑</option>
+                </select>
             </div>
-        </main>
-    </div>
+            <span id="new-calls-pill" class="hidden mt-2 inline-flex items-center rounded-full bg-emerald-400/20 text-emerald-300 px-2.5 py-1 text-xs font-bold border border-emerald-400/30">New calls arrived</span>
+        </div>
 
-    <!-- Filters modal -->
-    <div id="filters-modal" class="hidden fixed inset-0 z-50">
-        <div class="absolute inset-0 bg-slate-900/40"></div>
-        <div class="absolute inset-0 flex items-end sm:items-center justify-center p-4">
-            <div class="w-full max-w-xl rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
-                <div class="p-4 border-b border-slate-200 flex items-center justify-between">
+        <!-- Call list -->
+        <div id="call-list" class="flex-1 overflow-y-auto p-3 space-y-2 no-scrollbar"></div>
+
+        <!-- Footer exports -->
+        <div class="p-3 border-t border-white/10 flex items-center gap-2">
+            <button id="btn-export-csv" class="glass flex-1 rounded-lg py-2 text-xs font-semibold text-white hover:bg-white/10 transition">CSV</button>
+            <button id="btn-export-excel" class="glass flex-1 rounded-lg py-2 text-xs font-semibold text-white hover:bg-white/10 transition">Excel</button>
+            <button id="btn-export-json" class="flex-1 rounded-lg py-2 text-xs font-semibold bg-indigo-500 text-white hover:bg-indigo-400 transition disabled:opacity-40 disabled:cursor-not-allowed" disabled>JSON</button>
+        </div>
+    </aside>
+
+    <!-- Resize handle -->
+    <div id="sidebar-resizer" class="w-1 bg-slate-300 hover:bg-indigo-400 cursor-col-resize transition-colors"></div>
+
+    <!-- ═══════════════ MAIN ═══════════════ -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
+
+        <!-- Top bar -->
+        <div class="px-6 py-4 border-b border-slate-200 bg-white shadow-sm z-10">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <h2 class="text-xl font-bold text-slate-900" id="detail-title">Select a call</h2>
+                    <div class="text-sm text-slate-500 mt-0.5" id="detail-date"></div>
+                </div>
+                <button id="btn-copy-summary" class="hidden rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition shadow-sm">
+                    Copy summary
+                </button>
+            </div>
+
+            <!-- Analytics strip -->
+            <div class="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3" id="analytics"></div>
+
+            <!-- Tabs -->
+            <div class="mt-4 flex items-center gap-1.5 flex-wrap">
+                <button data-tab="summary"    class="tab-btn tab-active rounded-xl px-4 py-2 text-sm font-semibold border transition">Summary</button>
+                <button data-tab="transcript" class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition">Transcript</button>
+                <button data-tab="details"    class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition">Details</button>
+                <button data-tab="charts"     class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition">Charts</button>
+                <button data-tab="audio"      class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition">Audio</button>
+                <button data-tab="raw"        class="tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition">Raw JSON</button>
+            </div>
+        </div>
+
+        <div id="call-detail" class="flex-1 overflow-y-auto p-6 no-scrollbar"></div>
+    </main>
+</div>
+
+<!-- ═══════════════ FILTERS MODAL ═══════════════ -->
+<div id="filters-modal" class="hidden fixed inset-0 z-50">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+    <div class="absolute inset-0 flex items-center justify-center p-4">
+        <div class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-200 overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex items-center justify-between">
+                <div>
+                    <div class="text-base font-bold text-slate-900">Filter Calls</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Narrow down your call list</div>
+                </div>
+                <button id="btn-close-filters" class="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50">✕ Close</button>
+            </div>
+            <div class="p-5 space-y-5">
+                <div class="grid grid-cols-2 gap-3">
                     <div>
-                        <div class="text-base font-bold text-slate-900">Filters</div>
-                        <div class="text-xs text-slate-500">Applied client-side. No backend changes.</div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">From Date</label>
+                        <input id="filter-date-from" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/50"/>
                     </div>
-                    <button id="btn-close-filters"
-                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                        Close
-                    </button>
-                </div>
-                <div class="p-4 space-y-4">
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">From date</label>
-                            <input id="filter-date-from" type="date"
-                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">To date</label>
-                            <input id="filter-date-to" type="date"
-                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Lead score min</label>
-                            <input id="filter-lead-min" type="number" min="0" max="10" step="1" placeholder="e.g. 5"
-                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
-                        </div>
-                        <div>
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Lead score max</label>
-                            <input id="filter-lead-max" type="number" min="0" max="10" step="1" placeholder="e.g. 9"
-                                class="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-slate-900/15" />
-                        </div>
-                    </div>
-
                     <div>
-                        <label class="block text-xs font-semibold text-slate-700 mb-2">Sentiment</label>
-                        <div class="flex flex-wrap gap-2">
-                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
-                                <input class="sentiment" type="checkbox" value="positive" />
-                                Positive
-                            </label>
-                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
-                                <input class="sentiment" type="checkbox" value="neutral" />
-                                Neutral
-                            </label>
-                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
-                                <input class="sentiment" type="checkbox" value="negative" />
-                                Negative
-                            </label>
-                            <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm text-slate-700 bg-white">
-                                <input class="sentiment" type="checkbox" value="unknown" />
-                                Unknown
-                            </label>
-                        </div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">To Date</label>
+                        <input id="filter-date-to" type="date" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/50"/>
                     </div>
                 </div>
-                <div class="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                    <button id="btn-clear-filters"
-                        class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                        Clear
-                    </button>
-                    <button id="btn-apply-filters"
-                        class="rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-slate-800">
-                        Apply
-                    </button>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Min Lead Score</label>
+                        <input id="filter-lead-min" type="number" min="0" max="10" placeholder="0" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/50"/>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 mb-1.5">Max Lead Score</label>
+                        <input id="filter-lead-max" type="number" min="0" max="10" placeholder="10" class="w-full rounded-xl border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400/50"/>
+                    </div>
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-2">Sentiment</label>
+                    <div class="flex flex-wrap gap-2">
+                        ${["positive","neutral","negative","unknown"].map(s => `
+                        <label class="inline-flex items-center gap-2 rounded-full border border-slate-200 px-3 py-1.5 text-sm cursor-pointer hover:bg-slate-50">
+                            <input class="sentiment" type="checkbox" value="${s}"/> ${s.charAt(0).toUpperCase()+s.slice(1)}
+                        </label>`).join("")}
+                    </div>
+                </div>
+            </div>
+            <div class="p-4 border-t border-slate-100 bg-slate-50 flex justify-between gap-3">
+                <button id="btn-clear-filters" class="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">Clear all</button>
+                <button id="btn-apply-filters" class="rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 px-5 py-2 text-sm font-semibold text-white shadow-lg hover:opacity-90 transition">Apply Filters</button>
             </div>
         </div>
     </div>
+</div>
 
-    <script>
-        const els = {
-            sidebarSubtitle: document.getElementById('sidebar-subtitle'),
-            callList: document.getElementById('call-list'),
-            detailTitle: document.getElementById('detail-title'),
-            detailDate: document.getElementById('detail-date'),
-            callDetail: document.getElementById('call-detail'),
-            analytics: document.getElementById('analytics'),
-            search: document.getElementById('search'),
-            sort: document.getElementById('sort'),
-            btnRefresh: document.getElementById('btn-refresh'),
-            btnFilters: document.getElementById('btn-filters'),
-            btnExportCsv: document.getElementById('btn-export-csv'),
-            btnExportExcel: document.getElementById('btn-export-excel'),
-            btnExportJson: document.getElementById('btn-export-json'),
-            btnCopySummary: document.getElementById('btn-copy-summary'),
-            autoRefresh: document.getElementById('auto-refresh'),
-            autoRefreshInterval: document.getElementById('auto-refresh-interval'),
-            newCallsPill: document.getElementById('new-calls-pill'),
-            filtersModal: document.getElementById('filters-modal'),
-            btnCloseFilters: document.getElementById('btn-close-filters'),
-            btnApplyFilters: document.getElementById('btn-apply-filters'),
-            btnClearFilters: document.getElementById('btn-clear-filters'),
-            filterDateFrom: document.getElementById('filter-date-from'),
-            filterDateTo: document.getElementById('filter-date-to'),
-            filterLeadMin: document.getElementById('filter-lead-min'),
-            filterLeadMax: document.getElementById('filter-lead-max'),
-            sidebarResizer: document.getElementById('sidebar-resizer'),
-        };
+<script>
+const els = {
+    sidebarSubtitle: document.getElementById('sidebar-subtitle'),
+    callList: document.getElementById('call-list'),
+    detailTitle: document.getElementById('detail-title'),
+    detailDate: document.getElementById('detail-date'),
+    callDetail: document.getElementById('call-detail'),
+    analytics: document.getElementById('analytics'),
+    search: document.getElementById('search'),
+    sort: document.getElementById('sort'),
+    btnRefresh: document.getElementById('btn-refresh'),
+    btnFilters: document.getElementById('btn-filters'),
+    btnExportCsv: document.getElementById('btn-export-csv'),
+    btnExportExcel: document.getElementById('btn-export-excel'),
+    btnExportJson: document.getElementById('btn-export-json'),
+    btnCopySummary: document.getElementById('btn-copy-summary'),
+    autoRefresh: document.getElementById('auto-refresh'),
+    autoRefreshInterval: document.getElementById('auto-refresh-interval'),
+    newCallsPill: document.getElementById('new-calls-pill'),
+    liveDot: document.getElementById('live-dot'),
+    filtersModal: document.getElementById('filters-modal'),
+    btnCloseFilters: document.getElementById('btn-close-filters'),
+    btnApplyFilters: document.getElementById('btn-apply-filters'),
+    btnClearFilters: document.getElementById('btn-clear-filters'),
+    filterDateFrom: document.getElementById('filter-date-from'),
+    filterDateTo: document.getElementById('filter-date-to'),
+    filterLeadMin: document.getElementById('filter-lead-min'),
+    filterLeadMax: document.getElementById('filter-lead-max'),
+    sidebarResizer: document.getElementById('sidebar-resizer'),
+};
 
-        const state = {
-            allCalls: [],
-            visibleCalls: [],
-            selectedFilename: null,
-            selectedTab: "summary",
-            loading: false,
-            error: null,
-            lastFetchAt: null,
-            newFilenames: new Set(),
-            searchQuery: "",
-            sortBy: "newest",
-            filters: {
-                dateFrom: null, // yyyy-mm-dd
-                dateTo: null,   // yyyy-mm-dd
-                leadMin: null,
-                leadMax: null,
-                sentiments: new Set(), // lowercased values
-            },
-            autoRefresh: {
-                enabled: false,
-                intervalMs: 30000,
-                timer: null,
-                inFlight: false,
-            },
-        };
+const state = {
+    allCalls: [], visibleCalls: [], selectedFilename: null, selectedTab: "summary",
+    loading: false, error: null, lastFetchAt: null, newFilenames: new Set(),
+    searchQuery: "", sortBy: "newest",
+    filters: { dateFrom: null, dateTo: null, leadMin: null, leadMax: null, sentiments: new Set() },
+    autoRefresh: { enabled: false, intervalMs: 30000, timer: null, inFlight: false },
+    charts: {},
+};
 
-        function escapeHtml(s) {
-            return String(s ?? "")
-                .replaceAll("&", "&amp;")
-                .replaceAll("<", "&lt;")
-                .replaceAll(">", "&gt;")
-                .replaceAll('"', "&quot;")
-                .replaceAll("'", "&#39;");
-        }
+function escapeHtml(s) {
+    return String(s ?? "").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
+}
+function safeNumber(n) { const x = Number(n); return Number.isFinite(x) ? x : null; }
+function parseCallStart(call) {
+    if (!call?.call_start) return null;
+    const d = new Date(call.call_start);
+    return Number.isNaN(d.getTime()) ? null : d;
+}
+function getTranscriptArray(call) {
+    if (!call) return [];
+    if (Array.isArray(call.transcript)) return call.transcript;
+    if (Array.isArray(call)) return call;
+    return [];
+}
 
-        function safeNumber(n) {
-            const x = Number(n);
-            return Number.isFinite(x) ? x : null;
-        }
+function normalizeCall(raw) {
+    const filename = raw?.filename ?? "unknown";
+    const callStart = parseCallStart(raw);
+    const caller = raw?.caller_number ?? null;
+    const summary = raw?.summary && typeof raw.summary === "object" ? raw.summary : null;
+    const leadScore = summary ? safeNumber(summary.lead_score) : null;
+    const sentiment = (summary?.sentiment ?? "unknown").toString().trim().toLowerCase() || "unknown";
+    const transcript = getTranscriptArray(raw);
+    const transcriptText = transcript.map(t => t?.text ?? "").join(" ").trim();
+    const title = caller ? caller : String(filename).replace(/\.json$/i, "");
+    const dateText = callStart ? callStart.toLocaleString() : "Unknown date";
+    const searchHaystack = [title, filename, dateText, summary?.summary ?? "", sentiment, transcriptText, raw?.business_type ?? "", raw?.intake ? JSON.stringify(raw.intake) : ""].join("\n").toLowerCase();
+    return { raw, filename, title, caller_number: caller, call_start: callStart, dateText, summary, leadScore, sentiment, transcript, transcriptText, searchHaystack };
+}
 
-        function parseCallStart(call) {
-            if (!call || !call.call_start) return null;
-            const d = new Date(call.call_start);
-            return Number.isNaN(d.getTime()) ? null : d;
-        }
+function sentimentColor(s) {
+    return { positive: "#10b981", negative: "#ef4444", neutral: "#f59e0b", unknown: "#94a3b8" }[s] ?? "#94a3b8";
+}
+function sentimentBg(s) {
+    return { positive: "bg-emerald-50 text-emerald-700 border-emerald-200", negative: "bg-red-50 text-red-700 border-red-200", neutral: "bg-amber-50 text-amber-700 border-amber-200", unknown: "bg-slate-100 text-slate-500 border-slate-200" }[s] ?? "bg-slate-100 text-slate-500 border-slate-200";
+}
 
-        function getTranscriptArray(call) {
-            if (!call) return [];
-            if (Array.isArray(call.transcript)) return call.transcript;
-            if (Array.isArray(call)) return call;
-            return [];
-        }
+function applyFiltersAndSort(calls, ui) {
+    const q = ui.searchQuery.trim().toLowerCase();
+    const { sentiments, dateFrom, dateTo, leadMin, leadMax } = ui.filters;
+    const dfrom = dateFrom ? new Date(dateFrom + "T00:00:00") : null;
+    const dto = dateTo ? new Date(dateTo + "T23:59:59") : null;
+    let out = calls.filter(c => {
+        if (q && !c.searchHaystack.includes(q)) return false;
+        if (sentiments.size > 0 && !sentiments.has(c.sentiment)) return false;
+        if (dfrom || dto) { if (!c.call_start) return false; if (dfrom && c.call_start < dfrom) return false; if (dto && c.call_start > dto) return false; }
+        if (leadMin != null || leadMax != null) { if (c.leadScore == null) return false; if (leadMin != null && c.leadScore < leadMin) return false; if (leadMax != null && c.leadScore > leadMax) return false; }
+        return true;
+    });
+    const lv = (c) => c.leadScore == null ? -Infinity : c.leadScore;
+    const tv = (c) => c.call_start ? c.call_start.getTime() : 0;
+    out.sort((a,b) => {
+        if (ui.sortBy === "oldest") return tv(a)-tv(b);
+        if (ui.sortBy === "lead_score_desc") return lv(b)-lv(a);
+        if (ui.sortBy === "lead_score_asc") return lv(a)-lv(b);
+        return tv(b)-tv(a);
+    });
+    return out;
+}
 
-        function normalizeCall(raw) {
-            const filename = raw?.filename ?? "unknown";
-            const callStart = parseCallStart(raw);
-            const caller = raw?.caller_number ?? null;
+function computeAnalytics(calls) {
+    const total = calls.length;
+    const now = new Date();
+    const todayKey = now.toISOString().slice(0,10);
+    let callsToday=0, leadSum=0, leadCount=0;
+    const sentimentCounts = { positive:0, neutral:0, negative:0, unknown:0 };
+    const byDay = new Map();
+    const byBusiness = new Map();
+    const leadDist = { low:0, mid:0, high:0 };
+    for (const c of calls) {
+        if (c.call_start) { const k = c.call_start.toISOString().slice(0,10); byDay.set(k,(byDay.get(k)??0)+1); if(k===todayKey) callsToday++; }
+        if (c.leadScore != null) { leadSum+=c.leadScore; leadCount++; if(c.leadScore<=3) leadDist.low++; else if(c.leadScore<=6) leadDist.mid++; else leadDist.high++; }
+        sentimentCounts[c.sentiment] = (sentimentCounts[c.sentiment]??0)+1;
+        const bt = c.raw?.business_type ?? "unknown";
+        byBusiness.set(bt, (byBusiness.get(bt)??0)+1);
+    }
+    const avgLead = leadCount > 0 ? leadSum/leadCount : null;
+    const days = [];
+    for (let i=13; i>=0; i--) { const d=new Date(now); d.setDate(now.getDate()-i); const k=d.toISOString().slice(0,10); days.push({key:k,count:byDay.get(k)??0,label:k.slice(5)}); }
+    return { total, callsToday, avgLead, sentimentCounts, days, byBusiness, leadDist };
+}
 
-            const summary = raw?.summary && typeof raw.summary === "object" ? raw.summary : null;
-            const leadScore = summary ? safeNumber(summary.lead_score) : null;
-            const sentiment = (summary?.sentiment ?? "unknown").toString().trim().toLowerCase() || "unknown";
+function renderAnalytics() {
+    const a = computeAnalytics(state.visibleCalls);
+    const avgLeadText = a.avgLead==null ? "N/A" : a.avgLead.toFixed(1);
+    const topSentiment = Object.entries(a.sentimentCounts).sort((x,y)=>y[1]-x[1])[0]?.[0] ?? "unknown";
+    const sentColor = sentimentColor(topSentiment);
+    els.analytics.innerHTML = `
+        <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm card-hover">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Total Calls</div>
+            <div class="mt-1 text-3xl font-black text-slate-900">${a.total}</div>
+            <div class="mt-1 text-xs text-slate-500">${a.callsToday} today</div>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm card-hover">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Avg Lead Score</div>
+            <div class="mt-1 text-3xl font-black text-slate-900">${avgLeadText}</div>
+            <div class="mt-2 w-full bg-slate-100 rounded-full h-1.5"><div class="lead-bar h-1.5" style="width:${a.avgLead!=null?Math.round(a.avgLead*10)+'%':'0%'}"></div></div>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm card-hover">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide">Top Sentiment</div>
+            <div class="mt-1 text-xl font-black capitalize" style="color:${sentColor}">${topSentiment}</div>
+            <div class="mt-1 text-xs text-slate-500">${a.sentimentCounts[topSentiment]??0} of ${a.total} calls</div>
+        </div>
+        <div class="rounded-2xl bg-white border border-slate-200 p-4 shadow-sm card-hover overflow-hidden">
+            <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">Last 14 Days</div>
+            ${makeSparkBars(a.days)}
+        </div>
+    `;
+}
 
-            const transcript = getTranscriptArray(raw);
-            const transcriptText = transcript
-                .map(t => (t && typeof t === "object" ? (t.text ?? "") : ""))
-                .join(" ")
-                .trim();
+function makeSparkBars(days) {
+    const max = Math.max(1, ...days.map(d => d.count));
+    const bars = days.map((d,i) => {
+        const pct = Math.round((d.count/max)*100);
+        return `<div class="flex-1 flex flex-col items-center gap-1">
+            <div class="w-full rounded-t" style="height:32px;display:flex;align-items:flex-end;">
+                <div class="w-full rounded" style="height:${pct}%;background:linear-gradient(180deg,#6366f1,#8b5cf6);min-height:${d.count>0?'3px':'1px'};opacity:${d.count>0?'1':'0.2'}"></div>
+            </div>
+        </div>`;
+    }).join("");
+    return `<div class="flex items-end gap-0.5" style="height:32px;">${bars}</div>`;
+}
 
-            const title = caller ? caller : String(filename).replace(/\.json$/i, "");
-            const dateText = callStart ? callStart.toLocaleString() : "Unknown date";
+function setTab(tab) {
+    state.selectedTab = tab;
+    document.querySelectorAll(".tab-btn").forEach(btn => {
+        const active = btn.getAttribute("data-tab") === tab;
+        btn.className = active
+            ? "tab-btn tab-active rounded-xl px-4 py-2 text-sm font-semibold border transition"
+            : "tab-btn rounded-xl px-4 py-2 text-sm font-semibold border border-slate-200 text-slate-600 bg-white hover:bg-slate-50 transition";
+    });
+    renderDetail();
+}
 
-            const searchHaystack = [
-                title,
-                filename,
-                dateText,
-                summary?.summary ?? "",
-                summary?.follow_up_action ?? "",
-                sentiment,
-                transcriptText,
-                raw?.business_type ?? "",
-                raw?.intake ? JSON.stringify(raw.intake) : "",
-            ].join("\n").toLowerCase();
+function selectedCall() {
+    if (!state.selectedFilename) return null;
+    return state.allCalls.find(c => c.filename === state.selectedFilename) ?? null;
+}
 
-            return {
-                raw,
-                filename,
-                title,
-                caller_number: caller,
-                call_start: callStart,
-                dateText,
-                summary,
-                leadScore,
-                sentiment,
-                transcript,
-                transcriptText,
-                searchHaystack,
-            };
-        }
+function highlight(text, query) {
+    const t = String(text ?? "");
+    const q = query.trim();
+    if (!q) return escapeHtml(t);
+    const idx = t.toLowerCase().indexOf(q.toLowerCase());
+    if (idx < 0) return escapeHtml(t);
+    return `${escapeHtml(t.slice(0,idx))}<mark class="bg-amber-200 text-slate-900 rounded px-0.5">${escapeHtml(t.slice(idx,idx+q.length))}</mark>${escapeHtml(t.slice(idx+q.length))}`;
+}
 
-        function applyFiltersAndSort(calls, ui) {
-            const q = ui.searchQuery.trim().toLowerCase();
-            const sentiments = ui.filters.sentiments;
-            const dateFrom = ui.filters.dateFrom ? new Date(ui.filters.dateFrom + "T00:00:00") : null;
-            const dateTo = ui.filters.dateTo ? new Date(ui.filters.dateTo + "T23:59:59") : null;
-            const leadMin = ui.filters.leadMin;
-            const leadMax = ui.filters.leadMax;
+function renderCallList() {
+    const el = els.callList;
+    if (state.loading) {
+        el.innerHTML = Array.from({length:6}).map(()=>`
+            <div class="rounded-xl p-4 animate-pulse glass">
+                <div class="h-3 w-32 bg-white/20 rounded mb-2"></div>
+                <div class="h-2 w-20 bg-white/10 rounded mb-3"></div>
+                <div class="h-2 w-full bg-white/10 rounded"></div>
+            </div>`).join("");
+        return;
+    }
+    if (state.error) {
+        el.innerHTML = `<div class="rounded-xl border border-red-400/30 bg-red-400/10 p-4 text-red-300">
+            <div class="font-bold text-sm">Failed to load</div>
+            <div class="mt-1 text-xs">${escapeHtml(state.error)}</div>
+            <button id="btn-retry" class="mt-3 rounded-lg bg-red-500 px-3 py-1.5 text-xs font-semibold text-white">Retry</button>
+        </div>`;
+        document.getElementById("btn-retry")?.addEventListener("click", () => fetchCalls({reason:"retry"}));
+        return;
+    }
+    if (state.visibleCalls.length === 0) {
+        el.innerHTML = `<div class="rounded-xl glass p-5 text-center">
+            <div class="text-sm font-bold text-white/80">No calls match</div>
+            <div class="mt-1 text-xs text-slate-400">Try clearing filters</div>
+            <button id="btn-clear-search" class="mt-3 glass rounded-lg px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10">Clear all</button>
+        </div>`;
+        document.getElementById("btn-clear-search")?.addEventListener("click", ()=>{ state.searchQuery=""; els.search.value=""; clearFilters(); recomputeAndRender(); });
+        return;
+    }
+    el.innerHTML = state.visibleCalls.map(call => {
+        const selected = call.filename === state.selectedFilename;
+        const pill = state.newFilenames.has(call.filename) ? `<span class="ml-1 rounded-full bg-emerald-400/20 text-emerald-300 px-1.5 py-0.5 text-[10px] font-bold">NEW</span>` : "";
+        const lead = call.leadScore == null ? "—" : String(call.leadScore);
+        const bt = call.raw?.business_type ?? "unknown";
+        const btColor = bt === "doctor" ? "bg-blue-400/20 text-blue-300" : bt === "bakery" ? "bg-amber-400/20 text-amber-300" : "bg-slate-400/20 text-slate-400";
+        const sColor = sentimentColor(call.sentiment);
+        const summary = call.summary?.summary ? escapeHtml(call.summary.summary) : "";
+        return `
+        <button data-filename="${escapeHtml(call.filename)}"
+            class="w-full text-left rounded-xl p-3.5 border transition-all duration-150 ${selected ? 'bg-white/15 border-indigo-400/50 shadow-lg' : 'glass border-transparent hover:bg-white/10'}">
+            <div class="flex items-start justify-between gap-2">
+                <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 min-w-0">
+                        <div class="h-2 w-2 rounded-full shrink-0" style="background:${sColor}"></div>
+                        <div class="font-semibold text-white text-sm truncate">${escapeHtml(call.title)}${pill}</div>
+                    </div>
+                    <div class="mt-0.5 text-[11px] text-slate-400 truncate">${escapeHtml(call.dateText)}</div>
+                </div>
+                <div class="shrink-0 text-right">
+                    <div class="text-xs font-bold text-white">Score ${escapeHtml(lead)}</div>
+                    <span class="mt-0.5 inline-block text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${btColor}">${escapeHtml(bt)}</span>
+                </div>
+            </div>
+            ${summary ? `<div class="mt-2 text-[12px] text-slate-400 line-clamp-2 leading-relaxed">${summary}</div>` : ""}
+        </button>`;
+    }).join("");
 
-            let out = calls.filter(c => {
-                if (q && !c.searchHaystack.includes(q)) return false;
-
-                if (sentiments.size > 0 && !sentiments.has(c.sentiment)) return false;
-
-                if (dateFrom || dateTo) {
-                    if (!c.call_start) return false;
-                    if (dateFrom && c.call_start < dateFrom) return false;
-                    if (dateTo && c.call_start > dateTo) return false;
-                }
-
-                if (leadMin != null || leadMax != null) {
-                    if (c.leadScore == null) return false;
-                    if (leadMin != null && c.leadScore < leadMin) return false;
-                    if (leadMax != null && c.leadScore > leadMax) return false;
-                }
-
-                return true;
-            });
-
-            const sortBy = ui.sortBy;
-            const leadValue = (c) => (c.leadScore == null ? Number.NEGATIVE_INFINITY : c.leadScore);
-            const timeValue = (c) => (c.call_start ? c.call_start.getTime() : 0);
-
-            out.sort((a, b) => {
-                if (sortBy === "oldest") return timeValue(a) - timeValue(b);
-                if (sortBy === "lead_score_desc") return leadValue(b) - leadValue(a);
-                if (sortBy === "lead_score_asc") return leadValue(a) - leadValue(b);
-                return timeValue(b) - timeValue(a); // newest
-            });
-
-            return out;
-        }
-
-        function computeAnalytics(calls) {
-            const total = calls.length;
-            const now = new Date();
-            const todayKey = now.toISOString().slice(0, 10);
-
-            let callsToday = 0;
-            let leadSum = 0;
-            let leadCount = 0;
-            const sentimentCounts = { positive: 0, neutral: 0, negative: 0, unknown: 0 };
-
-            const byDay = new Map(); // yyyy-mm-dd -> count
-            for (const c of calls) {
-                if (c.call_start) {
-                    const key = c.call_start.toISOString().slice(0, 10);
-                    byDay.set(key, (byDay.get(key) ?? 0) + 1);
-                    if (key === todayKey) callsToday += 1;
-                }
-                if (c.leadScore != null) {
-                    leadSum += c.leadScore;
-                    leadCount += 1;
-                }
-                sentimentCounts[c.sentiment] = (sentimentCounts[c.sentiment] ?? 0) + 1;
-            }
-
-            const avgLead = leadCount > 0 ? (leadSum / leadCount) : null;
-
-            // last 14 days histogram (including today)
-            const days = [];
-            for (let i = 13; i >= 0; i--) {
-                const d = new Date(now);
-                d.setDate(now.getDate() - i);
-                const key = d.toISOString().slice(0, 10);
-                days.push({ key, count: byDay.get(key) ?? 0, label: key.slice(5) });
-            }
-
-            return { total, callsToday, avgLead, sentimentCounts, days };
-        }
-
-        function makeSparkBars(days) {
-            const w = 240, h = 44, pad = 2;
-            const max = Math.max(1, ...days.map(d => d.count));
-            const barW = Math.floor((w - pad * (days.length - 1)) / days.length);
-            let x = 0;
-            const rects = days.map(d => {
-                const bh = Math.round((d.count / max) * h);
-                const y = h - bh;
-                const r = `<rect x="${x}" y="${y}" width="${barW}" height="${bh}" rx="2" ry="2" />`;
-                x += barW + pad;
-                return r;
-            }).join("");
-            return `<svg viewBox="0 0 ${w} ${h}" class="h-11 w-60 text-slate-900/80" aria-hidden="true">
-                <g fill="currentColor" opacity="0.22">${rects}</g>
-            </svg>`;
-        }
-
-        function setTab(tab) {
-            state.selectedTab = tab;
-            document.querySelectorAll(".tab-btn").forEach(btn => {
-                const active = btn.getAttribute("data-tab") === tab;
-                btn.className = active
-                    ? "tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-slate-900 text-white"
-                    : "tab-btn rounded-lg px-3 py-2 text-sm font-semibold bg-white text-slate-700 border border-slate-200 hover:bg-slate-50";
-            });
+    el.querySelectorAll("button[data-filename]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const fn = btn.getAttribute("data-filename");
+            if (!fn) return;
+            state.selectedFilename = fn;
+            state.newFilenames.delete(fn);
+            updateNewCallsPill();
+            renderCallList();
             renderDetail();
-        }
+        });
+    });
+}
 
-        function selectedCall() {
-            if (!state.selectedFilename) return null;
-            return state.allCalls.find(c => c.filename === state.selectedFilename) ?? null;
-        }
-
-        function highlight(text, query) {
-            const t = String(text ?? "");
-            const q = query.trim();
-            if (!q) return escapeHtml(t);
-            const idx = t.toLowerCase().indexOf(q.toLowerCase());
-            if (idx < 0) return escapeHtml(t);
-            const pre = t.slice(0, idx);
-            const mid = t.slice(idx, idx + q.length);
-            const post = t.slice(idx + q.length);
-            return `${escapeHtml(pre)}<mark class="bg-amber-100 text-slate-900 rounded px-1">${escapeHtml(mid)}</mark>${escapeHtml(post)}`;
-        }
-
-        function renderAnalytics() {
-            const a = computeAnalytics(state.visibleCalls);
-            const avgLeadText = a.avgLead == null ? "N/A" : a.avgLead.toFixed(1);
-            const topSentiment = Object.entries(a.sentimentCounts).sort((x, y) => (y[1] - x[1]))[0]?.[0] ?? "unknown";
-
-            els.analytics.innerHTML = `
-                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="text-xs font-semibold text-slate-500">Visible calls</div>
-                    <div class="mt-1 text-2xl font-black text-slate-900">${a.total}</div>
-                    <div class="mt-1 text-xs text-slate-500">After search/filters</div>
+function renderEmptyDetail() {
+    els.detailTitle.textContent = "Select a call";
+    els.detailDate.textContent = "";
+    els.btnExportJson.disabled = true;
+    els.btnCopySummary.classList.add("hidden");
+    els.callDetail.innerHTML = `
+        <div class="h-full flex items-center justify-center">
+            <div class="text-center max-w-xs">
+                <div class="mx-auto h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-100 to-purple-100 flex items-center justify-center mb-4 shadow-inner">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-8 w-8 text-indigo-400">
+                        <path d="M22 16.92v3a2 2 0 01-2.18 2 19.8 19.8 0 01-8.63-3.07A19.5 19.5 0 013.7 10.77 19.8 19.8 0 01.67 2.18 2 2 0 012.64 0h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 7.91a16 16 0 006.12 6.12l.97-.97a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="text-xs font-semibold text-slate-500">Calls today</div>
-                    <div class="mt-1 text-2xl font-black text-slate-900">${a.callsToday}</div>
-                    <div class="mt-1 text-xs text-slate-500">Based on call_start</div>
+                <div class="text-lg font-bold text-slate-900">No call selected</div>
+                <div class="mt-1 text-sm text-slate-500">Pick a call from the sidebar to view details, transcript, and analytics.</div>
+            </div>
+        </div>`;
+}
+
+function renderDetail() {
+    const call = selectedCall();
+    if (!call) { renderEmptyDetail(); return; }
+    els.detailTitle.textContent = call.title;
+    els.detailDate.textContent = call.call_start ? call.call_start.toLocaleString() : call.dateText;
+    els.btnExportJson.disabled = false;
+
+    const q = state.searchQuery.trim();
+    const summaryText = call.summary?.summary ?? null;
+    const nextSteps = call.summary?.follow_up_action ?? null;
+    const lead = call.leadScore == null ? "N/A" : String(call.leadScore);
+    const sentiment = call.sentiment ?? "unknown";
+    const sColor = sentimentColor(sentiment);
+    const sBadge = sentimentBg(sentiment);
+    const bt = call.raw?.business_type ?? "unknown";
+    const duration = call.raw?.duration_seconds ?? null;
+    const durationText = duration != null ? `${Math.floor(duration/60)}m ${duration%60}s` : "—";
+
+    // ── SUMMARY TAB ──
+    const summaryHtml = `
+        <div class="space-y-4">
+            <div class="rounded-2xl bg-gradient-to-br from-indigo-600 to-purple-700 p-6 text-white shadow-xl">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <div class="text-xs font-semibold text-indigo-200 uppercase tracking-widest">AI Summary</div>
+                        <div class="mt-1 text-2xl font-black">Call Overview</div>
+                    </div>
+                    <div class="text-right shrink-0">
+                        <div class="text-xs text-indigo-200 font-semibold">Lead Score</div>
+                        <div class="text-4xl font-black mt-0.5">${escapeHtml(lead)}</div>
+                    </div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="text-xs font-semibold text-slate-500">Avg lead score</div>
-                    <div class="mt-1 text-2xl font-black text-slate-900">${avgLeadText}</div>
-                    <div class="mt-1 text-xs text-slate-500">Only calls with scores</div>
+                <div class="mt-4 grid grid-cols-3 gap-3">
+                    <div class="rounded-xl bg-white/10 p-3">
+                        <div class="text-[10px] text-indigo-200 font-semibold uppercase">Sentiment</div>
+                        <div class="mt-1 text-sm font-bold capitalize">${escapeHtml(sentiment)}</div>
+                    </div>
+                    <div class="rounded-xl bg-white/10 p-3">
+                        <div class="text-[10px] text-indigo-200 font-semibold uppercase">Duration</div>
+                        <div class="mt-1 text-sm font-bold">${durationText}</div>
+                    </div>
+                    <div class="rounded-xl bg-white/10 p-3">
+                        <div class="text-[10px] text-indigo-200 font-semibold uppercase">Type</div>
+                        <div class="mt-1 text-sm font-bold capitalize">${escapeHtml(bt)}</div>
+                    </div>
                 </div>
-                <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-                    <div class="flex items-start justify-between gap-2">
-                        <div>
-                            <div class="text-xs font-semibold text-slate-500">Last 14 days</div>
-                            <div class="mt-1 text-xs text-slate-500">Top sentiment: <span class="font-semibold text-slate-700">${escapeHtml(topSentiment)}</span></div>
+            </div>
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="h-6 w-6 rounded-lg bg-indigo-100 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 text-indigo-600"><path d="M9 12l2 2 4-4M21 12a9 9 0 11-18 0 9 9 0 0118 0z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900">Summary</div>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">${summaryText ? highlight(summaryText, q) : '<span class="text-slate-400 italic">No summary available yet.</span>'}</p>
+            </div>
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="flex items-center gap-2 mb-3">
+                    <div class="h-6 w-6 rounded-lg bg-amber-100 flex items-center justify-center">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-3.5 w-3.5 text-amber-600"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    </div>
+                    <div class="text-sm font-bold text-slate-900">Next Steps</div>
+                </div>
+                <p class="text-sm text-slate-700 leading-relaxed">${nextSteps ? highlight(nextSteps, q) : '<span class="text-slate-400 italic">No follow-up action required.</span>'}</p>
+            </div>
+        </div>`;
+
+    // ── TRANSCRIPT TAB ──
+    const transcript = call.transcript ?? [];
+    const transcriptHtml = transcript.length === 0
+        ? `<div class="rounded-2xl bg-white border border-slate-200 p-8 text-center shadow-sm">
+            <div class="text-slate-400 text-sm">No transcript available for this call.</div>
+           </div>`
+        : `<div class="space-y-3 max-w-3xl mx-auto">
+            ${transcript.map((turn,i) => {
+                const role = (turn?.role ?? "unknown").toString();
+                const isUser = role === "user";
+                const text = turn?.text ?? "";
+                return `<div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] ${isUser ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white rounded-2xl rounded-br-sm shadow-md' : 'bg-white border border-slate-200 text-slate-900 rounded-2xl rounded-bl-sm shadow-sm'}  p-4">
+                        <div class="flex items-center justify-between gap-4 mb-2">
+                            <span class="text-[11px] font-bold uppercase tracking-wider ${isUser ? 'text-indigo-200' : 'text-slate-400'}">${isUser ? 'Caller' : 'AI Agent'}</span>
+                            <button data-copy-turn="${i}" class="text-[11px] font-semibold ${isUser ? 'text-indigo-200 hover:text-white' : 'text-slate-400 hover:text-slate-600'} transition">Copy</button>
                         </div>
-                        ${makeSparkBars(a.days)}
+                        <div class="text-sm leading-relaxed">${highlight(text, q)}</div>
+                    </div>
+                </div>`;
+            }).join("")}
+           </div>`;
+
+    // ── DETAILS TAB ──
+    const intake = call.raw?.intake ?? null;
+    const FIELD_LABELS = {
+        doctor: [["patient_name","Patient Name"],["phone_number","Phone Number"],["is_new_patient","New Patient?"],["reason_for_visit","Reason for Visit"],["preferred_date","Preferred Date"],["preferred_time","Preferred Time"],["doctor_preference","Doctor Preference"],["outcome","Outcome"],["notes","Notes"]],
+        bakery: [["customer_name","Customer Name"],["phone_number","Phone Number"],["items","Items Ordered"],["quantity","Quantity"],["pickup_or_delivery","Pickup / Delivery"],["desired_date","Desired Date"],["desired_time","Desired Time"],["address","Delivery Address"],["special_instructions","Special Instructions"],["outcome","Outcome"],["notes","Notes"]],
+    };
+    function renderIntakeRows(intake, bt) {
+        const fields = FIELD_LABELS[bt] ?? Object.keys(intake).map(k=>[k,k.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())]);
+        return fields.filter(([key])=>{const v=intake[key]; return v!==null&&v!==undefined&&v!=="";}).map(([key,label]) => {
+            const val = intake[key];
+            const display = typeof val==="boolean"?(val?"Yes":"No"):escapeHtml(String(val));
+            const isOutcome = key === "outcome";
+            const outcomeColor = val==="booked"||val==="order_confirmed" ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : val==="emergency_redirect" ? "bg-red-50 text-red-700 border border-red-200" : "bg-slate-100 text-slate-600 border border-slate-200";
+            return `<div class="flex items-start gap-4 py-3 border-b border-slate-100 last:border-0">
+                <div class="text-xs font-semibold text-slate-400 uppercase tracking-wide w-36 shrink-0 pt-0.5">${escapeHtml(label)}</div>
+                <div class="flex-1">${isOutcome ? `<span class="text-xs font-bold px-2.5 py-1 rounded-full ${outcomeColor} capitalize">${display}</span>` : `<span class="text-sm text-slate-800">${display}</span>`}</div>
+            </div>`;
+        }).join("");
+    }
+    const detailsHtml = intake && typeof intake === "object"
+        ? `<div class="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm max-w-2xl">
+            <div class="flex items-center gap-3 mb-5">
+                <div class="h-9 w-9 rounded-xl ${bt==='doctor'?'bg-blue-100':'bg-amber-100'} flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" class="h-5 w-5 ${bt==='doctor'?'text-blue-600':'text-amber-600'}">
+                        ${bt==='doctor' ? '<path d="M12 2a5 5 0 100 10A5 5 0 0012 2zM2 20c0-4 4.5-7 10-7s10 3 10 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>' : '<path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>'}
+                    </svg>
+                </div>
+                <div>
+                    <div class="text-base font-bold text-slate-900 capitalize">${escapeHtml(bt)} Intake</div>
+                    <div class="text-xs text-slate-500">Collected during the call</div>
+                </div>
+            </div>
+            <div>${renderIntakeRows(intake, bt)}</div>
+           </div>`
+        : `<div class="rounded-2xl bg-white border border-slate-200 p-8 text-center shadow-sm">
+            <div class="text-slate-400 text-sm">No structured details were captured for this call.</div>
+           </div>`;
+
+    // ── CHARTS TAB ──
+    const a = computeAnalytics(state.visibleCalls);
+    const chartsHtml = `
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="text-sm font-bold text-slate-900 mb-1">Calls Per Day</div>
+                <div class="text-xs text-slate-400 mb-4">Last 14 days across all visible calls</div>
+                <canvas id="chart-daily" height="160"></canvas>
+            </div>
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="text-sm font-bold text-slate-900 mb-1">Sentiment Breakdown</div>
+                <div class="text-xs text-slate-400 mb-4">Distribution across all visible calls</div>
+                <div class="flex items-center gap-6">
+                    <canvas id="chart-sentiment" width="140" height="140"></canvas>
+                    <div class="space-y-2 flex-1">
+                        ${Object.entries(a.sentimentCounts).filter(([,v])=>v>0).map(([k,v])=>`
+                        <div class="flex items-center gap-2">
+                            <div class="h-2.5 w-2.5 rounded-full shrink-0" style="background:${sentimentColor(k)}"></div>
+                            <div class="text-xs text-slate-600 capitalize flex-1">${k}</div>
+                            <div class="text-xs font-bold text-slate-900">${v}</div>
+                        </div>`).join("")}
                     </div>
                 </div>
-            `;
-        }
+            </div>
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="text-sm font-bold text-slate-900 mb-1">Lead Score Distribution</div>
+                <div class="text-xs text-slate-400 mb-4">Low (0–3) · Mid (4–6) · High (7–10)</div>
+                <canvas id="chart-lead" height="160"></canvas>
+            </div>
+            <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+                <div class="text-sm font-bold text-slate-900 mb-1">Business Type Split</div>
+                <div class="text-xs text-slate-400 mb-4">Call volume by business</div>
+                <canvas id="chart-business" height="160"></canvas>
+            </div>
+        </div>`;
 
-        function renderCallList() {
-            const listEl = els.callList;
-
-            if (state.loading) {
-                listEl.innerHTML = `
-                    <div class="space-y-2">
-                        ${Array.from({ length: 8 }).map(() => `
-                            <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm animate-pulse">
-                                <div class="h-4 w-40 bg-slate-200 rounded"></div>
-                                <div class="mt-2 h-3 w-24 bg-slate-200 rounded"></div>
-                                <div class="mt-3 h-3 w-full bg-slate-200 rounded"></div>
-                            </div>
-                        `).join("")}
-                    </div>
-                `;
-                return;
-            }
-
-            if (state.error) {
-                listEl.innerHTML = `
-                    <div class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-900">
-                        <div class="font-bold">Couldn’t load calls</div>
-                        <div class="mt-1 text-sm text-rose-800">${escapeHtml(state.error)}</div>
-                        <button id="btn-retry"
-                            class="mt-3 rounded-lg bg-rose-700 px-3 py-2 text-sm font-semibold text-white hover:bg-rose-800">
-                            Retry
-                        </button>
-                    </div>
-                `;
-                document.getElementById("btn-retry")?.addEventListener("click", () => fetchCalls({ reason: "retry" }));
-                return;
-            }
-
-            if (state.visibleCalls.length === 0) {
-                listEl.innerHTML = `
-                    <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="font-bold text-slate-900">No calls match</div>
-                        <div class="mt-1 text-sm text-slate-500">Try clearing filters or broadening your search.</div>
-                        <button id="btn-clear-search"
-                            class="mt-4 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                            Clear search & filters
-                        </button>
-                    </div>
-                `;
-                document.getElementById("btn-clear-search")?.addEventListener("click", () => {
-                    state.searchQuery = "";
-                    els.search.value = "";
-                    clearFilters();
-                    recomputeAndRender();
-                });
-                return;
-            }
-
-            listEl.innerHTML = state.visibleCalls.map(call => {
-                const selected = call.filename === state.selectedFilename;
-                const pill = state.newFilenames.has(call.filename)
-                    ? `<span class="ml-2 rounded-full bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[11px] font-bold border border-emerald-200">NEW</span>`
-                    : "";
-
-                const summary = call.summary?.summary ? escapeHtml(call.summary.summary) : "";
-                const lead = call.leadScore == null ? "—" : String(call.leadScore);
-                const sentiment = escapeHtml(call.sentiment ?? "unknown");
-
-                return `
-                    <button data-filename="${escapeHtml(call.filename)}"
-                        class="w-full text-left rounded-xl border ${selected ? 'border-slate-900 bg-white' : 'border-slate-200 bg-white hover:border-slate-300'} p-4 shadow-sm transition">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="min-w-0">
-                                <div class="font-bold text-slate-900 truncate">${escapeHtml(call.title)}${pill}</div>
-                                <div class="mt-1 text-xs text-slate-500">${escapeHtml(call.dateText)}</div>
-                            </div>
-                            <div class="shrink-0 text-right">
-                                <div class="text-[11px] font-bold text-slate-700">Lead ${escapeHtml(lead)}</div>
-                                <div class="mt-1 text-[11px] font-semibold text-slate-500">${sentiment}</div>
-                            </div>
-                        </div>
-                        ${summary ? `<div class="mt-3 text-sm text-slate-600 line-clamp-2">${summary}</div>` : ""}
+    // ── AUDIO TAB ──
+    const audioUrl = call.raw?.recording_url ?? call.raw?.audio_url ?? null;
+    const audioHtml = audioUrl
+        ? `<div class="rounded-2xl bg-white border border-slate-200 p-6 shadow-sm max-w-2xl">
+            <div class="text-sm font-bold text-slate-900 mb-5">Call Recording</div>
+            <audio id="custom-audio" src="${escapeHtml(audioUrl)}" preload="metadata" class="hidden"></audio>
+            <div class="rounded-2xl bg-slate-50 border border-slate-200 p-5 space-y-4">
+                <!-- waveform / progress -->
+                <div class="relative h-14 flex items-center group cursor-pointer" id="audio-progress-wrap">
+                    <!-- background track -->
+                    <div class="absolute inset-x-0 h-1.5 bg-slate-200 rounded-full"></div>
+                    <!-- played fill -->
+                    <div id="audio-fill" class="absolute left-0 h-1.5 rounded-full" style="width:0%;background:linear-gradient(90deg,#6366f1,#8b5cf6)"></div>
+                    <!-- thumb -->
+                    <div id="audio-thumb" class="absolute h-4 w-4 rounded-full bg-indigo-600 shadow-md border-2 border-white -translate-x-1/2 transition-transform group-hover:scale-125" style="left:0%"></div>
+                    <!-- invisible hit area -->
+                    <div id="audio-hit" class="absolute inset-0"></div>
+                </div>
+                <!-- time row -->
+                <div class="flex items-center justify-between text-xs font-semibold text-slate-500">
+                    <span id="audio-current">0:00</span>
+                    <span id="audio-duration">0:00</span>
+                </div>
+                <!-- controls row -->
+                <div class="flex items-center gap-4">
+                    <button id="audio-rewind" title="−10s" class="rounded-xl border border-slate-200 bg-white h-9 w-9 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition shadow-sm">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M12 5V1L7 6l5 5V7a6 6 0 016 6 6 6 0 01-6 6 6 6 0 01-6-6H4a8 8 0 008 8 8 8 0 008-8 8 8 0 00-8-8z" fill="currentColor"/></svg>
                     </button>
-                `;
-            }).join("");
-
-            listEl.querySelectorAll("button[data-filename]").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    const filename = btn.getAttribute("data-filename");
-                    if (!filename) return;
-                    state.selectedFilename = filename;
-                    state.newFilenames.delete(filename);
-                    updateNewCallsPill();
-                    renderCallList();
-                    renderDetail();
-                });
-            });
-        }
-
-        function renderEmptyDetail() {
-            els.detailTitle.textContent = "Select a call";
-            els.detailDate.textContent = "";
-            els.btnExportJson.disabled = true;
-            els.btnCopySummary.classList.add("hidden");
-            els.callDetail.innerHTML = `
-                <div class="h-full flex items-center justify-center">
-                    <div class="max-w-md text-center">
-                        <div class="mx-auto h-12 w-12 rounded-2xl bg-white border border-slate-200 flex items-center justify-center text-slate-700 shadow-sm">
-                            <svg viewBox="0 0 24 24" fill="none" class="h-6 w-6" aria-hidden="true">
-                                <path d="M7 7h10M7 12h10M7 17h6" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
-                            </svg>
-                        </div>
-                        <div class="mt-4 text-lg font-bold text-slate-900">Open a call</div>
-                        <div class="mt-1 text-sm text-slate-500">Pick a call on the left to view summary, transcript, raw JSON, and exports.</div>
+                    <button id="audio-play" class="h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg text-white transition hover:opacity-90 active:scale-95" style="background:linear-gradient(135deg,#6366f1,#8b5cf6)">
+                        <svg id="audio-play-icon" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 ml-0.5"><path d="M8 5v14l11-7z"/></svg>
+                        <svg id="audio-pause-icon" viewBox="0 0 24 24" fill="currentColor" class="h-5 w-5 hidden"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+                    </button>
+                    <button id="audio-forward" title="+10s" class="rounded-xl border border-slate-200 bg-white h-9 w-9 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition shadow-sm">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4"><path d="M12 5V1l5 5-5 5V7a6 6 0 00-6 6 6 6 0 006 6 6 6 0 006-6h2a8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8z" fill="currentColor"/></svg>
+                    </button>
+                    <div class="ml-auto flex items-center gap-2">
+                        <svg viewBox="0 0 24 24" fill="none" class="h-4 w-4 text-slate-400 shrink-0"><path d="M11 5L6 9H2v6h4l5 4V5z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M19.07 4.93a10 10 0 010 14.14M15.54 8.46a5 5 0 010 7.07" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                        <input id="audio-volume" type="range" min="0" max="1" step="0.02" value="1" class="w-20 accent-indigo-600 cursor-pointer"/>
                     </div>
+                    <select id="audio-speed" class="ml-2 rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-400/40">
+                        <option value="0.75">0.75×</option>
+                        <option value="1" selected>1×</option>
+                        <option value="1.25">1.25×</option>
+                        <option value="1.5">1.5×</option>
+                        <option value="2">2×</option>
+                    </select>
                 </div>
-            `;
-        }
+            </div>
+           </div>`
+        : `<div class="rounded-2xl bg-white border border-slate-200 p-8 text-center shadow-sm">
+            <div class="text-slate-400 text-sm">No recording available for this call.</div>
+           </div>`;
 
-        function renderDetail() {
-            const call = selectedCall();
-            if (!call) {
-                renderEmptyDetail();
-                return;
-            }
-
-            els.detailTitle.textContent = call.title;
-            els.detailDate.textContent = call.call_start ? call.call_start.toLocaleString() : call.dateText;
-            els.btnExportJson.disabled = false;
-
-            const q = state.searchQuery.trim();
-            const summaryText = call.summary?.summary ?? null;
-            const nextSteps = call.summary?.follow_up_action ?? null;
-            const lead = call.leadScore == null ? "N/A" : String(call.leadScore);
-            const sentiment = call.sentiment ?? "unknown";
-
-            const summaryHtml = `
-                <div class="rounded-2xl border border-indigo-200 bg-indigo-50 p-5 shadow-sm">
-                    <div class="flex items-start justify-between gap-4">
-                        <div>
-                            <div class="text-xs font-semibold text-indigo-700">AI summary</div>
-                            <div class="mt-1 text-lg font-black text-indigo-950">Call overview</div>
-                        </div>
-                        <div class="text-right">
-                            <div class="text-xs font-semibold text-indigo-700">Lead score</div>
-                            <div class="mt-1 text-2xl font-black text-indigo-950">${escapeHtml(lead)}</div>
-                            <div class="mt-1 text-xs font-semibold text-indigo-700">Sentiment: <span class="text-indigo-950">${escapeHtml(sentiment)}</span></div>
-                        </div>
-                    </div>
-                    <div class="mt-4 space-y-3">
-                        <div class="rounded-xl bg-white/70 border border-indigo-100 p-4">
-                            <div class="text-xs font-semibold text-indigo-700">Summary</div>
-                            <div class="mt-1 text-sm text-indigo-950">${summaryText ? highlight(summaryText, q) : `<span class="text-indigo-700/70 italic">No summary available.</span>`}</div>
-                        </div>
-                        <div class="rounded-xl bg-white/70 border border-indigo-100 p-4">
-                            <div class="text-xs font-semibold text-indigo-700">Next steps</div>
-                            <div class="mt-1 text-sm text-indigo-950">${nextSteps ? highlight(nextSteps, q) : `<span class="text-indigo-700/70 italic">No follow-up action available.</span>`}</div>
-                        </div>
-                    </div>
+    // ── RAW JSON TAB ──
+    const rawHtml = `
+        <div class="rounded-2xl bg-white border border-slate-200 p-5 shadow-sm">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <div class="font-bold text-slate-900">Raw JSON</div>
+                    <div class="text-xs text-slate-500 mt-0.5">Exact API response for this call</div>
                 </div>
-            `;
+                <button id="btn-copy-raw" class="rounded-xl border border-slate-200 px-3 py-1.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">Copy</button>
+            </div>
+            <pre class="whitespace-pre-wrap break-words text-xs bg-slate-50 border border-slate-100 rounded-xl p-4 text-slate-700 overflow-auto no-scrollbar max-h-[60vh]" id="raw-json">${escapeHtml(JSON.stringify(call.raw, null, 2))}</pre>
+        </div>`;
 
-            const transcript = call.transcript ?? [];
-            const transcriptHtml = transcript.length === 0
-                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm text-slate-700">
-                        <div class="font-bold">No transcript</div>
-                        <div class="mt-1 text-sm text-slate-500">This call log doesn’t contain a conversational transcript array.</div>
-                   </div>`
-                : `<div class="space-y-3">
-                        ${transcript.map((turn, i) => {
-                            const role = (turn?.role ?? "unknown").toString();
-                            const isUser = role === "user";
-                            const who = isUser ? "Caller" : "AI Agent";
-                            const text = turn?.text ?? "";
-                            return `
-                                <div class="flex ${isUser ? 'justify-end' : 'justify-start'}">
-                                    <div class="max-w-[90%] rounded-2xl p-4 shadow-sm ${isUser ? 'bg-slate-900 text-white rounded-br-none' : 'bg-white border border-slate-200 text-slate-900 rounded-bl-none'}">
-                                        <div class="flex items-center justify-between gap-3">
-                                            <div class="text-xs font-bold ${isUser ? 'text-slate-200' : 'text-slate-400'} uppercase tracking-wider">${escapeHtml(who)}</div>
-                                            <button data-copy-turn="${i}"
-                                                class="text-xs font-semibold ${isUser ? 'text-slate-200/80 hover:text-white' : 'text-slate-500 hover:text-slate-700'}">
-                                                Copy
-                                            </button>
-                                        </div>
-                                        <div class="mt-2 text-[15px] leading-relaxed break-words">${highlight(text, q)}</div>
-                                    </div>
-                                </div>
-                            `;
-                        }).join("")}
-                   </div>`;
+    let html = "";
+    if (state.selectedTab === "summary") html = summaryHtml;
+    else if (state.selectedTab === "transcript") html = transcriptHtml;
+    else if (state.selectedTab === "details") html = detailsHtml;
+    else if (state.selectedTab === "charts") html = chartsHtml;
+    else if (state.selectedTab === "audio") html = audioHtml;
+    else if (state.selectedTab === "raw") html = rawHtml;
+    else html = summaryHtml;
 
-            const rawHtml = `
-                <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                    <div class="flex items-center justify-between gap-3">
-                        <div>
-                            <div class="font-bold text-slate-900">Raw JSON</div>
-                            <div class="text-sm text-slate-500">Exactly what came from the API for this call.</div>
-                        </div>
-                        <button id="btn-copy-raw"
-                            class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50">
-                            Copy JSON
-                        </button>
-                    </div>
-                    <pre class="mt-4 whitespace-pre-wrap break-words text-xs bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 overflow-auto no-scrollbar" id="raw-json">${escapeHtml(JSON.stringify(call.raw, null, 2))}</pre>
-                </div>
-            `;
+    els.callDetail.innerHTML = html;
 
-            const audioUrl = call.raw?.recording_url ?? call.raw?.audio_url ?? null;
-            const audioHtml = audioUrl
-                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="font-bold text-slate-900">Audio</div>
-                        <div class="mt-1 text-sm text-slate-500">Using a URL found in the call log.</div>
-                        <audio class="mt-4 w-full" controls src="${escapeHtml(audioUrl)}"></audio>
-                   </div>`
-                : `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="font-bold text-slate-900">No recording available</div>
-                        <div class="mt-1 text-sm text-slate-500">Your <code>/calls</code> logs don’t include an audio URL yet. If you later add <code>recording_url</code> to the log JSON, this tab will start playing it automatically.</div>
-                   </div>`;
-
-            const intake = call.raw?.intake ?? null;
-            const businessType = (call.raw?.business_type ?? "unknown").toString();
-            const detailsHtml = intake
-                ? `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="font-bold text-slate-900">Captured details</div>
-                        <div class="mt-1 text-sm text-slate-500">Business: <span class="font-semibold text-slate-700">${escapeHtml(businessType)}</span></div>
-                        <pre class="mt-4 whitespace-pre-wrap break-words text-xs bg-slate-50 border border-slate-200 rounded-xl p-4 text-slate-800 overflow-auto no-scrollbar">${escapeHtml(JSON.stringify(intake, null, 2))}</pre>
-                   </div>`
-                : `<div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-                        <div class="font-bold text-slate-900">No details captured</div>
-                        <div class="mt-1 text-sm text-slate-500">Place a new call, choose doctor/bakery in IVR, and complete the questions to see structured details here.</div>
-                   </div>`;
-
-            let html = "";
-            if (state.selectedTab === "summary") html = summaryHtml;
-            else if (state.selectedTab === "transcript") html = transcriptHtml;
-            else if (state.selectedTab === "raw") html = rawHtml;
-            else if (state.selectedTab === "audio") html = audioHtml;
-            else if (state.selectedTab === "details") html = detailsHtml;
-            else html = summaryHtml;
-
-            els.callDetail.innerHTML = html;
-
-            // Wire detail actions
-            if (state.selectedTab === "transcript") {
-                els.callDetail.querySelectorAll("button[data-copy-turn]").forEach(btn => {
-                    btn.addEventListener("click", async () => {
-                        const idx = Number(btn.getAttribute("data-copy-turn"));
-                        const t = transcript[idx]?.text ?? "";
-                        try { await navigator.clipboard.writeText(String(t)); } catch (_) { }
-                    });
-                });
+    // Wire events
+    if (state.selectedTab === "transcript") {
+        els.callDetail.querySelectorAll("button[data-copy-turn]").forEach(btn => {
+            btn.addEventListener("click", async () => {
+                const idx = Number(btn.getAttribute("data-copy-turn"));
+                const t = transcript[idx]?.text ?? "";
+                try { await navigator.clipboard.writeText(String(t)); } catch(_) {}
+            });
+        });
+    }
+    if (state.selectedTab === "raw") {
+        document.getElementById("btn-copy-raw")?.addEventListener("click", async () => {
+            try { await navigator.clipboard.writeText(JSON.stringify(call.raw, null, 2)); } catch(_) {}
+        });
+    }
+    if (state.selectedTab === "audio") {
+        const audio = document.getElementById("custom-audio");
+        const fill = document.getElementById("audio-fill");
+        const thumb = document.getElementById("audio-thumb");
+        const curEl = document.getElementById("audio-current");
+        const durEl = document.getElementById("audio-duration");
+        const playBtn = document.getElementById("audio-play");
+        const playIcon = document.getElementById("audio-play-icon");
+        const pauseIcon = document.getElementById("audio-pause-icon");
+        const progressWrap = document.getElementById("audio-progress-wrap");
+        const hitArea = document.getElementById("audio-hit");
+        const volSlider = document.getElementById("audio-volume");
+        const speedSel = document.getElementById("audio-speed");
+        if (audio) {
+            let cachedDur = null;
+            function fmtTime(s) { const m=Math.floor(s/60); return m+":"+String(Math.floor(s%60)).padStart(2,"0"); }
+            function knownDur() { return cachedDur ?? (isFinite(audio.duration) && audio.duration > 0 ? audio.duration : null); }
+            function updateBar() {
+                const dur = knownDur();
+                const pct = dur ? (audio.currentTime / dur) * 100 : 0;
+                fill.style.width = pct + "%";
+                thumb.style.left = pct + "%";
+                curEl.textContent = fmtTime(audio.currentTime);
             }
-            if (state.selectedTab === "raw") {
-                document.getElementById("btn-copy-raw")?.addEventListener("click", async () => {
-                    try { await navigator.clipboard.writeText(JSON.stringify(call.raw, null, 2)); } catch (_) { }
-                });
+            audio.addEventListener("loadedmetadata", () => {
+                if (isFinite(audio.duration) && audio.duration > 0) { cachedDur = audio.duration; durEl.textContent = fmtTime(cachedDur); }
+                updateBar();
+            });
+            audio.addEventListener("durationchange", () => {
+                if (isFinite(audio.duration) && audio.duration > 0) { cachedDur = audio.duration; durEl.textContent = fmtTime(cachedDur); }
+            });
+            audio.addEventListener("timeupdate", updateBar);
+            audio.addEventListener("ended", () => { playIcon.classList.remove("hidden"); pauseIcon.classList.add("hidden"); updateBar(); });
+            playBtn.addEventListener("click", () => {
+                if (audio.paused || audio.ended) { audio.play(); playIcon.classList.add("hidden"); pauseIcon.classList.remove("hidden"); }
+                else { audio.pause(); playIcon.classList.remove("hidden"); pauseIcon.classList.add("hidden"); }
+            });
+            document.getElementById("audio-rewind")?.addEventListener("click", () => { audio.currentTime = Math.max(0, audio.currentTime - 10); });
+            document.getElementById("audio-forward")?.addEventListener("click", () => {
+                const dur = knownDur();
+                const next = audio.currentTime + 10;
+                if (dur && next >= dur) return; // already at end, do nothing
+                audio.currentTime = next;
+            });
+            volSlider?.addEventListener("input", () => { audio.volume = volSlider.value; });
+            speedSel?.addEventListener("change", () => { audio.playbackRate = parseFloat(speedSel.value); });
+            function seekFromEvent(e) {
+                const rect = progressWrap.getBoundingClientRect();
+                const pct = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const dur = knownDur(); if (dur) { audio.currentTime = pct * dur; updateBar(); }
             }
-
-            // Summary copy button visibility
-            if (summaryText) {
-                els.btnCopySummary.classList.remove("hidden");
-            } else {
-                els.btnCopySummary.classList.add("hidden");
-            }
+            let seeking = false;
+            hitArea.addEventListener("mousedown", e => { seeking = true; seekFromEvent(e); });
+            document.addEventListener("mousemove", e => { if (seeking) seekFromEvent(e); });
+            document.addEventListener("mouseup", () => { seeking = false; });
+            hitArea.addEventListener("touchstart", e => { seeking = true; seekFromEvent(e.touches[0]); }, {passive:true});
+            document.addEventListener("touchmove", e => { if (seeking) seekFromEvent(e.touches[0]); }, {passive:true});
+            document.addEventListener("touchend", () => { seeking = false; });
         }
+    }
+    if (state.selectedTab === "charts") {
+        renderCharts(a);
+    }
 
-        function updateSubtitle() {
-            const total = state.allCalls.length;
-            const visible = state.visibleCalls.length;
-            const time = state.lastFetchAt ? `Updated ${state.lastFetchAt.toLocaleTimeString()}` : "";
-            els.sidebarSubtitle.textContent = `${visible}/${total} shown${time ? " • " + time : ""}`;
+    summaryText ? els.btnCopySummary.classList.remove("hidden") : els.btnCopySummary.classList.add("hidden");
+}
+
+function destroyChart(key) {
+    if (state.charts[key]) { try { state.charts[key].destroy(); } catch(_) {} state.charts[key] = null; }
+}
+
+function renderCharts(a) {
+    destroyChart("daily"); destroyChart("sentiment"); destroyChart("lead"); destroyChart("business");
+
+    // Calls per day
+    const dailyCtx = document.getElementById("chart-daily")?.getContext("2d");
+    if (dailyCtx) {
+        state.charts.daily = new Chart(dailyCtx, {
+            type: "bar",
+            data: {
+                labels: a.days.map(d => d.label),
+                datasets: [{ label: "Calls", data: a.days.map(d => d.count), backgroundColor: "rgba(99,102,241,0.7)", borderRadius: 6, borderSkipped: false }]
+            },
+            options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{ beginAtZero:true, ticks:{stepSize:1}, grid:{color:"rgba(0,0,0,0.05)"} }, x:{grid:{display:false}} } }
+        });
+    }
+
+    // Sentiment doughnut
+    const sentCtx = document.getElementById("chart-sentiment")?.getContext("2d");
+    if (sentCtx) {
+        const sentData = Object.entries(a.sentimentCounts).filter(([,v])=>v>0);
+        state.charts.sentiment = new Chart(sentCtx, {
+            type: "doughnut",
+            data: {
+                labels: sentData.map(([k])=>k),
+                datasets: [{ data: sentData.map(([,v])=>v), backgroundColor: sentData.map(([k])=>sentimentColor(k)), borderWidth: 0, hoverOffset: 6 }]
+            },
+            options: { responsive:false, cutout:"70%", plugins:{ legend:{display:false} } }
+        });
+    }
+
+    // Lead dist
+    const leadCtx = document.getElementById("chart-lead")?.getContext("2d");
+    if (leadCtx) {
+        state.charts.lead = new Chart(leadCtx, {
+            type: "bar",
+            data: {
+                labels: ["Low (0–3)", "Mid (4–6)", "High (7–10)"],
+                datasets: [{ label: "Calls", data: [a.leadDist.low, a.leadDist.mid, a.leadDist.high], backgroundColor: ["rgba(239,68,68,0.7)","rgba(245,158,11,0.7)","rgba(16,185,129,0.7)"], borderRadius: 6, borderSkipped: false }]
+            },
+            options: { responsive:true, plugins:{ legend:{display:false} }, scales:{ y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:"rgba(0,0,0,0.05)"}}, x:{grid:{display:false}} } }
+        });
+    }
+
+    // Business type
+    const bizCtx = document.getElementById("chart-business")?.getContext("2d");
+    if (bizCtx) {
+        const bizData = Array.from(a.byBusiness.entries());
+        state.charts.business = new Chart(bizCtx, {
+            type: "bar",
+            data: {
+                labels: bizData.map(([k])=>k),
+                datasets: [{ label: "Calls", data: bizData.map(([,v])=>v), backgroundColor: ["rgba(59,130,246,0.7)","rgba(245,158,11,0.7)","rgba(99,102,241,0.7)"], borderRadius: 6, borderSkipped: false }]
+            },
+            options: { indexAxis:"y", responsive:true, plugins:{ legend:{display:false} }, scales:{ x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:"rgba(0,0,0,0.05)"}}, y:{grid:{display:false}} } }
+        });
+    }
+}
+
+function updateSubtitle() {
+    const time = state.lastFetchAt ? state.lastFetchAt.toLocaleTimeString() : "";
+    els.sidebarSubtitle.textContent = `${state.visibleCalls.length}/${state.allCalls.length} calls${time ? " · " + time : ""}`;
+}
+
+function updateNewCallsPill() {
+    if (state.newFilenames.size > 0) { els.newCallsPill.classList.remove("hidden"); els.newCallsPill.textContent = `${state.newFilenames.size} new`; }
+    else els.newCallsPill.classList.add("hidden");
+}
+
+function recomputeAndRender() {
+    state.visibleCalls = applyFiltersAndSort(state.allCalls, state);
+    renderCallList();
+    renderAnalytics();
+    updateSubtitle();
+    if (state.selectedFilename && !state.allCalls.some(c => c.filename === state.selectedFilename)) state.selectedFilename = null;
+    renderDetail();
+}
+
+async function fetchCalls({ reason } = {}) {
+    if (state.autoRefresh.inFlight) return;
+    state.autoRefresh.inFlight = true;
+    state.loading = true; state.error = null;
+    renderCallList();
+    try {
+        const response = await fetch("/calls", { cache: "no-store" });
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data = await response.json();
+        const nextCalls = (data?.calls ?? []).map(normalizeCall);
+        const prevNames = new Set(state.allCalls.map(c => c.filename));
+        const nextNames = new Set(nextCalls.map(c => c.filename));
+        for (const name of nextNames) { if (!prevNames.has(name)) state.newFilenames.add(name); }
+        for (const name of Array.from(state.newFilenames)) { if (!nextNames.has(name)) state.newFilenames.delete(name); }
+        state.allCalls = nextCalls; state.lastFetchAt = new Date(); state.loading = false;
+        updateNewCallsPill(); recomputeAndRender();
+        if (!state.selectedFilename && state.visibleCalls.length > 0) {
+            state.selectedFilename = state.visibleCalls[0].filename;
+            state.newFilenames.delete(state.selectedFilename);
+            updateNewCallsPill(); renderCallList(); renderDetail();
         }
+    } catch(err) {
+        state.loading = false; state.error = err?.message ?? "Unknown error";
+        renderCallList(); renderEmptyDetail();
+    } finally { state.autoRefresh.inFlight = false; }
+}
 
-        function updateNewCallsPill() {
-            if (state.newFilenames.size > 0) {
-                els.newCallsPill.classList.remove("hidden");
-                els.newCallsPill.textContent = `${state.newFilenames.size} new`;
-            } else {
-                els.newCallsPill.classList.add("hidden");
-            }
-        }
+function openFilters() { els.filtersModal.classList.remove("hidden"); }
+function closeFilters() { els.filtersModal.classList.add("hidden"); }
+function clearFilters() {
+    state.filters = { dateFrom:null, dateTo:null, leadMin:null, leadMax:null, sentiments:new Set() };
+    els.filterDateFrom.value = ""; els.filterDateTo.value = "";
+    els.filterLeadMin.value = ""; els.filterLeadMax.value = "";
+    document.querySelectorAll("input.sentiment").forEach(cb => cb.checked = false);
+}
+function applyFiltersFromModal() {
+    state.filters.dateFrom = els.filterDateFrom.value || null;
+    state.filters.dateTo = els.filterDateTo.value || null;
+    state.filters.leadMin = els.filterLeadMin.value !== "" ? safeNumber(els.filterLeadMin.value) : null;
+    state.filters.leadMax = els.filterLeadMax.value !== "" ? safeNumber(els.filterLeadMax.value) : null;
+    const s = new Set(); document.querySelectorAll("input.sentiment").forEach(cb => { if(cb.checked) s.add(cb.value); });
+    state.filters.sentiments = s;
+    recomputeAndRender(); closeFilters();
+}
+function download(filename, text, mime) {
+    const blob = new Blob([text],{type:mime}); const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href=url; a.download=filename;
+    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+}
+function exportCsv() {
+    const rows = state.visibleCalls.map(c => ({ filename:c.filename, title:c.title, caller_number:c.caller_number??"", call_start:c.call_start?c.call_start.toISOString():"", lead_score:c.leadScore??"", sentiment:c.sentiment??"", summary:c.summary?.summary??"", follow_up_action:c.summary?.follow_up_action??"" }));
+    const cols = ["filename","title","caller_number","call_start","lead_score","sentiment","summary","follow_up_action"];
+    const esc = v => { const s=String(v??""); return /[",\n]/.test(s)?`"${s.replaceAll('"','""')}"`:`${s}`; };
+    const csv = [cols.join(","), ...rows.map(r=>cols.map(c=>esc(r[c])).join(","))].join("\n");
+    download(`calls_${new Date().toISOString().slice(0,10)}.csv`, csv, "text/csv;charset=utf-8");
+}
+function setupAutoRefresh() {
+    if (state.autoRefresh.timer) { clearInterval(state.autoRefresh.timer); state.autoRefresh.timer = null; }
+    els.liveDot.classList.toggle("hidden", !state.autoRefresh.enabled);
+    if (!state.autoRefresh.enabled) return;
+    state.autoRefresh.timer = setInterval(() => { if (!document.hidden) fetchCalls({reason:"poll"}); }, state.autoRefresh.intervalMs);
+}
+function setupSidebarResize() {
+    let dragging=false, startX=0, startW=360;
+    els.sidebarResizer.addEventListener("pointerdown", e => { dragging=true; startX=e.clientX; startW=parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-w"))||360; els.sidebarResizer.setPointerCapture(e.pointerId); });
+    els.sidebarResizer.addEventListener("pointermove", e => { if(!dragging) return; const next=Math.max(280,Math.min(560,startW+(e.clientX-startX))); document.documentElement.style.setProperty("--sidebar-w",`${next}px`); });
+    els.sidebarResizer.addEventListener("pointerup", ()=>dragging=false);
+    els.sidebarResizer.addEventListener("pointercancel", ()=>dragging=false);
+}
 
-        function recomputeAndRender() {
-            state.visibleCalls = applyFiltersAndSort(state.allCalls, state);
-            renderCallList();
-            renderAnalytics();
-            updateSubtitle();
-            // keep detail consistent
-            if (state.selectedFilename && !state.allCalls.some(c => c.filename === state.selectedFilename)) {
-                state.selectedFilename = null;
-            }
-            renderDetail();
-        }
+function wireEvents() {
+    els.btnRefresh.addEventListener("click", () => fetchCalls({reason:"manual"}));
+    els.search.addEventListener("input", () => { state.searchQuery = els.search.value||""; recomputeAndRender(); });
+    els.sort.addEventListener("change", () => { state.sortBy = els.sort.value; recomputeAndRender(); });
+    els.btnFilters.addEventListener("click", openFilters);
+    els.btnCloseFilters.addEventListener("click", closeFilters);
+    els.filtersModal.addEventListener("click", e => { if(e.target===els.filtersModal) closeFilters(); });
+    els.btnApplyFilters.addEventListener("click", applyFiltersFromModal);
+    els.btnClearFilters.addEventListener("click", () => { clearFilters(); recomputeAndRender(); });
+    els.btnExportCsv.addEventListener("click", exportCsv);
+    els.btnExportExcel.addEventListener("click", () => { window.location.href=`/export/excel?ts=${Date.now()}`; });
+    els.btnExportJson.addEventListener("click", () => { const c=selectedCall(); if(c) download(c.filename, JSON.stringify(c.raw,null,2), "application/json"); });
+    els.btnCopySummary.addEventListener("click", async () => { const c=selectedCall(); if(c?.summary?.summary) try{await navigator.clipboard.writeText(c.summary.summary);}catch(_){} });
+    els.autoRefresh.addEventListener("change", () => { state.autoRefresh.enabled=!!els.autoRefresh.checked; setupAutoRefresh(); });
+    els.autoRefreshInterval.addEventListener("change", () => { state.autoRefresh.intervalMs=Number(els.autoRefreshInterval.value)||30000; setupAutoRefresh(); });
+    document.addEventListener("visibilitychange", () => { if(!document.hidden&&state.autoRefresh.enabled) fetchCalls({reason:"focus"}); });
+    document.querySelectorAll(".tab-btn").forEach(btn => btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab"))));
+    setupSidebarResize();
+}
 
-        async function fetchCalls({ reason } = {}) {
-            if (state.autoRefresh.inFlight) return;
-            state.autoRefresh.inFlight = true;
-            state.loading = true;
-            state.error = null;
-            renderCallList();
-
-            try {
-                const response = await fetch("/calls", { cache: "no-store" });
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-                const data = await response.json();
-                const nextCalls = (data?.calls ?? []).map(normalizeCall);
-
-                const prevNames = new Set(state.allCalls.map(c => c.filename));
-                const nextNames = new Set(nextCalls.map(c => c.filename));
-                for (const name of nextNames) {
-                    if (!prevNames.has(name)) state.newFilenames.add(name);
-                }
-                // Clear markers for removed calls
-                for (const name of Array.from(state.newFilenames)) {
-                    if (!nextNames.has(name)) state.newFilenames.delete(name);
-                }
-
-                state.allCalls = nextCalls;
-                state.lastFetchAt = new Date();
-                state.loading = false;
-                updateNewCallsPill();
-                recomputeAndRender();
-
-                // If nothing selected yet, select first result
-                if (!state.selectedFilename && state.visibleCalls.length > 0) {
-                    state.selectedFilename = state.visibleCalls[0].filename;
-                    state.newFilenames.delete(state.selectedFilename);
-                    updateNewCallsPill();
-                    renderCallList();
-                    renderDetail();
-                }
-            } catch (err) {
-                state.loading = false;
-                state.error = err?.message ? String(err.message) : "Unknown error";
-                renderCallList();
-                renderEmptyDetail();
-            } finally {
-                state.autoRefresh.inFlight = false;
-            }
-        }
-
-        function openFilters() {
-            els.filtersModal.classList.remove("hidden");
-        }
-
-        function closeFilters() {
-            els.filtersModal.classList.add("hidden");
-        }
-
-        function clearFilters() {
-            state.filters.dateFrom = null;
-            state.filters.dateTo = null;
-            state.filters.leadMin = null;
-            state.filters.leadMax = null;
-            state.filters.sentiments = new Set();
-
-            els.filterDateFrom.value = "";
-            els.filterDateTo.value = "";
-            els.filterLeadMin.value = "";
-            els.filterLeadMax.value = "";
-            document.querySelectorAll("input.sentiment").forEach(cb => cb.checked = false);
-        }
-
-        function applyFiltersFromModal() {
-            state.filters.dateFrom = els.filterDateFrom.value || null;
-            state.filters.dateTo = els.filterDateTo.value || null;
-            state.filters.leadMin = els.filterLeadMin.value !== "" ? safeNumber(els.filterLeadMin.value) : null;
-            state.filters.leadMax = els.filterLeadMax.value !== "" ? safeNumber(els.filterLeadMax.value) : null;
-
-            const sentiments = new Set();
-            document.querySelectorAll("input.sentiment").forEach(cb => {
-                if (cb.checked) sentiments.add(cb.value);
-            });
-            state.filters.sentiments = sentiments;
-
-            recomputeAndRender();
-            closeFilters();
-        }
-
-        function download(filename, text, mime) {
-            const blob = new Blob([text], { type: mime });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = filename;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            URL.revokeObjectURL(url);
-        }
-
-        function exportCsv() {
-            const rows = state.visibleCalls.map(c => ({
-                filename: c.filename,
-                title: c.title,
-                caller_number: c.caller_number ?? "",
-                call_start: c.call_start ? c.call_start.toISOString() : "",
-                lead_score: c.leadScore ?? "",
-                sentiment: c.sentiment ?? "",
-                summary: c.summary?.summary ?? "",
-                follow_up_action: c.summary?.follow_up_action ?? "",
-            }));
-
-            const cols = ["filename", "title", "caller_number", "call_start", "lead_score", "sentiment", "summary", "follow_up_action"];
-            const escapeCsv = (v) => {
-                const s = String(v ?? "");
-                if (/[",\n]/.test(s)) return `"${s.replaceAll('"', '""')}"`;
-                return s;
-            };
-            const csv = [cols.join(","), ...rows.map(r => cols.map(c => escapeCsv(r[c])).join(","))].join("\n");
-            const stamp = new Date().toISOString().replaceAll(":", "").slice(0, 15);
-            download(`calls_${stamp}.csv`, csv, "text/csv;charset=utf-8");
-        }
-
-        function exportSelectedJson() {
-            const call = selectedCall();
-            if (!call) return;
-            download(call.filename, JSON.stringify(call.raw, null, 2), "application/json;charset=utf-8");
-        }
-
-        function exportExcel() {
-            const stamp = new Date().toISOString().replaceAll(":", "").slice(0, 15);
-            window.location.href = `/export/excel?ts=${encodeURIComponent(stamp)}`;
-        }
-
-        function setupAutoRefresh() {
-            if (state.autoRefresh.timer) {
-                clearInterval(state.autoRefresh.timer);
-                state.autoRefresh.timer = null;
-            }
-            if (!state.autoRefresh.enabled) return;
-
-            state.autoRefresh.timer = setInterval(() => {
-                if (document.hidden) return;
-                fetchCalls({ reason: "poll" });
-            }, state.autoRefresh.intervalMs);
-        }
-
-        function setupSidebarResize() {
-            let dragging = false;
-            let startX = 0;
-            let startW = 380;
-
-            els.sidebarResizer.addEventListener("pointerdown", (e) => {
-                dragging = true;
-                startX = e.clientX;
-                startW = parseInt(getComputedStyle(document.documentElement).getPropertyValue("--sidebar-w")) || 380;
-                els.sidebarResizer.setPointerCapture(e.pointerId);
-            });
-
-            els.sidebarResizer.addEventListener("pointermove", (e) => {
-                if (!dragging) return;
-                const dx = e.clientX - startX;
-                const next = Math.max(280, Math.min(560, startW + dx));
-                document.documentElement.style.setProperty("--sidebar-w", `${next}px`);
-            });
-
-            els.sidebarResizer.addEventListener("pointerup", () => { dragging = false; });
-            els.sidebarResizer.addEventListener("pointercancel", () => { dragging = false; });
-        }
-
-        function wireEvents() {
-            els.btnRefresh.addEventListener("click", () => fetchCalls({ reason: "manual" }));
-            els.search.addEventListener("input", () => {
-                state.searchQuery = els.search.value || "";
-                recomputeAndRender();
-            });
-            els.sort.addEventListener("change", () => {
-                state.sortBy = els.sort.value;
-                recomputeAndRender();
-            });
-
-            els.btnFilters.addEventListener("click", openFilters);
-            els.btnCloseFilters.addEventListener("click", closeFilters);
-            els.filtersModal.addEventListener("click", (e) => {
-                if (e.target === els.filtersModal.firstElementChild) closeFilters();
-            });
-            els.btnApplyFilters.addEventListener("click", applyFiltersFromModal);
-            els.btnClearFilters.addEventListener("click", () => {
-                clearFilters();
-                recomputeAndRender();
-            });
-
-            els.btnExportCsv.addEventListener("click", exportCsv);
-            els.btnExportExcel.addEventListener("click", exportExcel);
-            els.btnExportJson.addEventListener("click", exportSelectedJson);
-            els.btnCopySummary.addEventListener("click", async () => {
-                const call = selectedCall();
-                const text = call?.summary?.summary ?? "";
-                if (!text) return;
-                try { await navigator.clipboard.writeText(String(text)); } catch (_) { }
-            });
-
-            els.autoRefresh.addEventListener("change", () => {
-                state.autoRefresh.enabled = !!els.autoRefresh.checked;
-                setupAutoRefresh();
-            });
-            els.autoRefreshInterval.addEventListener("change", () => {
-                state.autoRefresh.intervalMs = Number(els.autoRefreshInterval.value) || 30000;
-                setupAutoRefresh();
-            });
-            document.addEventListener("visibilitychange", () => {
-                // Avoid a stale view if user comes back after a while
-                if (!document.hidden && state.autoRefresh.enabled) fetchCalls({ reason: "focus" });
-            });
-
-            document.querySelectorAll(".tab-btn").forEach(btn => {
-                btn.addEventListener("click", () => setTab(btn.getAttribute("data-tab")));
-            });
-
-            setupSidebarResize();
-        }
-
-        // Boot
-        renderEmptyDetail();
-        wireEvents();
-        fetchCalls({ reason: "boot" });
-    </script>
+renderEmptyDetail();
+wireEvents();
+fetchCalls({reason:"boot"});
+</script>
 </body>
-
 </html>

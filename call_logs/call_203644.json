@@ -1,0 +1,110 @@
+{
+  "filename": "call_203644.json",
+  "call_sid": "CAf3fdf7761a1d090c3c825d791841de74",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-24T20:35:17.234642",
+  "call_end": "2026-04-24T20:36:44.513066",
+  "duration_seconds": 87,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste! Dr. Sharma's clinic mein aapka swagat hai. Main aapki kya sahayata kar sakta hoon?\n\nAapka uttar?"
+    },
+    {
+      "role": "user",
+      "text": "I'm getting on Chris, eh?"
+    },
+    {
+      "role": "assistant",
+      "text": "Chris Ji, aapka poora naam?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Chris Gupta."
+    },
+    {
+      "role": "assistant",
+      "text": "Chris Ji, aapka poora naam Chris Gupta hai. Aapka ph no. confirm karna hoga, kripya aapka ph no. bataiye?"
+    },
+    {
+      "role": "user",
+      "text": "Angie"
+    },
+    {
+      "role": "assistant",
+      "text": "Chhuti-chhuti, yeh Angie ji ka ph no. hai 98654... (pause) confirm karne ke liye aapko ek baar phir kaha, is ph no. ke saath?"
+    },
+    {
+      "role": "user",
+      "text": "Cabo Elroes"
+    },
+    {
+      "role": "assistant",
+      "text": "Shukria, Chris ji! Aap Dr. Sharma ki paichle se aaye hain ya nayaa hain?"
+    },
+    {
+      "role": "user",
+      "text": "Again."
+    },
+    {
+      "role": "assistant",
+      "text": "Aap kya kaha, ji? Kya aap ek naye patidar hain ya phir se aa rahe hain Dr. Sharma ke clinic mein?"
+    },
+    {
+      "role": "user",
+      "text": "Can we talk in English? Yes."
+    },
+    {
+      "role": "assistant",
+      "text": "No problem, Chris Ji. English mein baat karne ka man bhi hai? So, are you a new patient or returning patient to Dr. Sharma's clinic?"
+    },
+    {
+      "role": "user",
+      "text": "I'm an existing patient, like"
+    },
+    {
+      "role": "user",
+      "text": "I visited him like..."
+    },
+    {
+      "role": "assistant",
+      "text": "Bilkul, Chris Ji. Kuch din pehle aapne appointment liya tha? Let me check in our system. Reason for today's visit, plz?"
+    },
+    {
+      "role": "user",
+      "text": "two, three times at least."
+    },
+    {
+      "role": "assistant",
+      "text": "Aapko kya hua hai? Kya aapko koi mahatvapoorn samasya ya dard ka samna karna pada hai? Koi ghatna hui hai jo aapne doctor ke saamne baar-at karne ka kaaran ban gayi hai?"
+    }
+  ],
+  "transcript_text": "Namaste! Dr. Sharma's clinic mein aapka swagat hai. Main aapki kya sahayata kar sakta hoon?\n\nAapka uttar? I'm getting on Chris, eh? Chris Ji, aapka poora naam? My name is Chris Gupta. Chris Ji, aapka poora naam Chris Gupta hai. Aapka ph no. confirm karna hoga, kripya aapka ph no. bataiye? Angie Chhuti-chhuti, yeh Angie ji ka ph no. hai 98654... (pause) confirm karne ke liye aapko ek baar phir kaha, is ph no. ke saath? Cabo Elroes Shukria, Chris ji! Aap Dr. Sharma ki paichle se aaye hain ya nayaa hain? Again. Aap kya kaha, ji? Kya aap ek naye patidar hain ya phir se aa rahe hain Dr. Sharma ke clinic mein? Can we talk in English? Yes. No problem, Chris Ji. English mein baat karne ka man bhi hai? So, are you a new patient or returning patient to Dr. Sharma's clinic? I'm an existing patient, like I visited him like... Bilkul, Chris Ji. Kuch din pehle aapne appointment liya tha? Let me check in our system. Reason for today's visit, plz? two, three times at least. Aapko kya hua hai? Kya aapko koi mahatvapoorn samasya ya dard ka samna karna pada hai? Koi ghatna hui hai jo aapne doctor ke saamne baar-at karne ka kaaran ban gayi hai?",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": "Chris Gupta",
+    "phone_number": "98654",
+    "is_new_patient": false,
+    "reason_for_visit": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": "Dr. Sharma",
+    "notes": "Patient is an existing patient, reason for visit not yet determined"
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": "Namaste! Dr. Sharma's clinic mein aapka swagat hai. Main aapki kya sahayata kar sakta hoon?\n\nAapka uttar? Chris Ji, aapka poora naam?",
+    "follow_up_action": null
+  },
+  "recording_sid": "REb7986d4f6889f494e64a83c68dc04fda",
+  "recording_url": "/recordings/REb7986d4f6889f494e64a83c68dc04fda.mp3",
+  "recording_status": "completed"
+}

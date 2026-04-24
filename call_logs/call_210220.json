@@ -1,0 +1,70 @@
+{
+  "filename": "call_210220.json",
+  "call_sid": "CA2a6a5eb6e7635cf79fdb2d24ffc651df",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-24T21:01:17.758158",
+  "call_end": "2026-04-24T21:02:20.898087",
+  "duration_seconds": 63,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakta hoon?"
+    },
+    {
+      "role": "user",
+      "text": "I'll get a doctor appointment."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, aap Doctor ke samne jaane ke liye aayenge. Aapka naam kya hai?"
+    },
+    {
+      "role": "user",
+      "text": "I MIRENAM TĚJS UCHTE"
+    },
+    {
+      "role": "assistant",
+      "text": "Mirenambaji Uchte Ji, noted. Aapke pas konsa phone number hai?"
+    },
+    {
+      "role": "user",
+      "text": "My number is 98711-34197."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, noted. Aap naye yaa wapas wapas Doctor ke paas aaye wale paas hai?"
+    },
+    {
+      "role": "user",
+      "text": "No, I'm not saying."
+    },
+    {
+      "role": "assistant",
+      "text": "Kya aapko yeh pata hai ki aapke aapne kahan se aa rahe the?"
+    }
+  ],
+  "transcript_text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakta hoon? I'll get a doctor appointment. Ji, aap Doctor ke samne jaane ke liye aayenge. Aapka naam kya hai? I MIRENAM TĚJS UCHTE Mirenambaji Uchte Ji, noted. Aapke pas konsa phone number hai? My number is 98711-34197. Ji, noted. Aap naye yaa wapas wapas Doctor ke paas aaye wale paas hai? No, I'm not saying. Kya aapko yeh pata hai ki aapke aapne kahan se aa rahe the?",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": "Mirenambaji Uchte",
+    "phone_number": "98711-34197",
+    "is_new_patient": null,
+    "reason_for_visit": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": null,
+    "notes": "Patient did not provide sufficient information to determine the outcome of the call."
+  },
+  "summary": {
+    "caller_name": "Mirenambaji Uchte",
+    "lead_score": 1,
+    "sentiment": "neutral",
+    "summary": "The caller contacted Dr. Sharma's clinic to book a doctor's appointment. The clinic staff collected the caller's name and phone number, and inquired about the purpose of the visit. The caller's appointment was noted, but they chose not to disclose the reason for their visit.",
+    "follow_up_action": null
+  },
+  "recording_sid": "RE6b5d0fc8813adacba1a8c3f625c8bb25",
+  "recording_url": "/recordings/RE6b5d0fc8813adacba1a8c3f625c8bb25.mp3",
+  "recording_status": "completed"
+}

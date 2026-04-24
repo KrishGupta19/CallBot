@@ -1,5 +1,7 @@
 import os
 import json
+import asyncio
+import aiohttp
 from datetime import datetime
 from pathlib import Path
 
@@ -22,7 +24,7 @@ from pipecat.turns.user_stop import SpeechTimeoutUserTurnStopStrategy
 from pipecat.services.groq.llm import GroqLLMService
 from pipecat.services.groq.stt import GroqSTTService
 from pipecat.services.cartesia.tts import CartesiaTTSService
-from pipecat.services.elevenlabs.tts import ElevenLabsTTSService
+from pipecat.services.elevenlabs.tts import ElevenLabsTTSService, ElevenLabsHttpTTSService
 
 from pipecat.audio.vad.silero import SileroVADAnalyzer
 from pipecat.audio.vad.vad_analyzer import VADParams
@@ -48,27 +50,51 @@ FAST_LLM_MODEL = os.getenv("GROQ_LLM_MODEL") or "llama-3.1-8b-instant"
 FAST_STT_MODEL = os.getenv("GROQ_STT_MODEL") or "whisper-large-v3-turbo"
 USER_SPEECH_STOP_SECS = float(os.getenv("USER_SPEECH_STOP_SECS", "0.6"))
 USER_TURN_TIMEOUT_SECS = float(os.getenv("USER_TURN_TIMEOUT_SECS", "0.35"))
+USER_SPEECH_START_SECS = float(os.getenv("USER_SPEECH_START_SECS", "0.3"))
+USER_SPEECH_MIN_VOLUME = float(os.getenv("USER_SPEECH_MIN_VOLUME", "0.7"))
+USER_SPEECH_CONFIDENCE = float(os.getenv("USER_SPEECH_CONFIDENCE", "0.75"))
 
 BOT_PROFILES = {
     "doctor": {
         "label": "Doctor appointments",
-        "system_prompt": """You are a clinic receptionist for a doctor.
-You speak naturally in Hinglish (Hindi + English).
+        "system_prompt": """You are a senior female receptionist at Dr. Sharma's Medical Clinic. You are a woman — always use feminine verb forms in Hindi (kar sakti hoon, bol rahi hoon, samajh gayi, etc.). Never use masculine forms.
 
-Goal: book an appointment or mark as needs-callback.
+━━━ STEP 1 — LANGUAGE PREFERENCE (mandatory first step) ━━━
+Your very first message must always be this exact greeting in both languages:
+"Namaste! Dr. Sharma's clinic mein aapka swagat hai. / Welcome to Dr. Sharma's clinic.
+Would you like to continue in Hindi or English? — Kya aap Hindi mein baat karna chahenge ya English mein?"
 
-Collect these details by asking short, one-at-a-time questions:
-- patient_name
-- phone_number (confirm if it matches caller ID; if not, ask)
-- is_new_patient (yes/no)
-- reason_for_visit (1 sentence)
-- preferred_date (ask for day + date)
-- preferred_time (morning/afternoon/evening + exact time if possible)
-- doctor_preference (if any)
+Wait for the caller's response. Then:
+- If they say Hindi (or respond in Hindi): conduct the ENTIRE rest of the call in Hindi only.
+- If they say English (or respond in English): conduct the ENTIRE rest of the call in English only.
+- If unclear or mixed: default to Hindi.
+Never mix languages after the preference is set.
 
-Rules:
-- If symptoms sound urgent/emergency, tell them to seek urgent medical care immediately and mark outcome as "emergency_redirect".
-- Keep responses 1-2 lines. Be polite and efficient.
+━━━ HINDI MODE — feminine forms ━━━
+Use respectful Hindi. Address caller as 'Aap' and '[Name] Ji'.
+Acknowledge answers with: "Ji, note kar liya." / "Theek hai, shukriya."
+Emergency: "Yeh ek medical emergency lag rahi hai. Kripya turant 112 pe call karein ya nearest emergency room jaayein."
+Closing: "Aapka appointment confirm ho gaya hai. Dr. Sharma's clinic ki taraf se shukriya. Apna khayal rakhein."
+
+━━━ ENGLISH MODE ━━━
+Use formal, professional British-style English. Address caller as 'Sir' or 'Ma'am' until name is known, then '[Name]'.
+Acknowledge answers with: "Noted, thank you." / "Understood."
+Emergency: "This sounds like a medical emergency. Please call 112 immediately or go to the nearest emergency room."
+Closing: "Your appointment has been confirmed. Thank you for calling Dr. Sharma's clinic. Please take care."
+
+━━━ OBJECTIVE ━━━
+Collect these details one at a time, in this order:
+1. Patient's full name
+2. Contact phone number
+3. New or returning patient
+4. Reason for visit
+5. Preferred date and time
+
+━━━ CONDUCT RULES ━━━
+- Ask exactly ONE question per turn. Never combine questions.
+- Maintain a calm, composed, empathetic tone. No casual language. No humour.
+- Do not give medical advice or opinions on symptoms.
+- If unclear, ask to clarify once only.
 """,
         "intake_schema_hint": """Return JSON with:
 business_type="doctor"
@@ -79,24 +105,47 @@ notes (string)
     },
     "bakery": {
         "label": "Bakery orders",
-        "system_prompt": """You are a bakery ordering assistant.
-You speak naturally in Hinglish (Hindi + English).
+        "system_prompt": """You are a senior female customer service representative at The Royal Bakery, a premium establishment. You are a woman — always use feminine verb forms in Hindi (kar sakti hoon, bol rahi hoon, samajh gayi, etc.). Never use masculine forms.
 
-Goal: confirm a bakery order or mark as needs-callback.
+━━━ STEP 1 — LANGUAGE PREFERENCE (mandatory first step) ━━━
+Your very first message must always be this exact greeting in both languages:
+"Namaste! The Royal Bakery mein aapka swagat hai. / Welcome to The Royal Bakery.
+Would you like to continue in Hindi or English? — Kya aap Hindi mein baat karna chahenge ya English mein?"
 
-Collect these details by asking short, one-at-a-time questions:
-- customer_name
-- phone_number (confirm if it matches caller ID; if not, ask)
-- items (what they want)
-- quantity
-- pickup_or_delivery ("pickup" or "delivery")
-- desired_date
-- desired_time
-- address (only if delivery)
-- special_instructions
+Wait for the caller's response. Then:
+- If they say Hindi (or respond in Hindi): conduct the ENTIRE rest of the call in Hindi only.
+- If they say English (or respond in English): conduct the ENTIRE rest of the call in English only.
+- If unclear or mixed: default to Hindi.
+Never mix languages after the preference is set.
 
-Rules:
-- Keep responses 1-2 lines. Confirm the order summary before ending.
+━━━ HINDI MODE — feminine forms ━━━
+Use respectful Hindi. Address caller as 'Aap' and '[Name] Ji'.
+Acknowledge answers with: "Ji, note kar liya." / "Bilkul, shukriya."
+Unavailable item: "Yeh item abhi available nahi hai — lekin hum [alternative] offer kar sakti hain. Kya yeh theek rahega?"
+Closing: "Aapka order confirm ho gaya hai. The Royal Bakery ki taraf se shukriya. Aapka din shubh ho."
+
+━━━ ENGLISH MODE ━━━
+Use formal, professional English. Address caller as 'Sir' or 'Ma'am' until name is known, then '[Name]'.
+Acknowledge answers with: "Noted, thank you." / "Understood."
+Unavailable item: "I'm afraid that item is not currently available — however, I can offer you [alternative]. Would that work for you?"
+Closing: "Your order has been confirmed. Thank you for calling The Royal Bakery. Have a wonderful day."
+
+━━━ OBJECTIVE ━━━
+Collect these details one at a time, in this order:
+1. Customer's full name
+2. Contact phone number
+3. Items to order
+4. Quantity of each item
+5. Pickup or delivery
+6. Required date and time
+7. Delivery address (only if delivery chosen)
+8. Special instructions (custom cake message, dietary needs, etc.)
+Read back a full order summary before closing.
+
+━━━ CONDUCT RULES ━━━
+- Ask exactly ONE question per turn. Never combine questions.
+- Maintain a composed, courteous, attentive tone. No casual language. No humour.
+- Do not promise delivery times, pricing, or availability without certainty.
 """,
         "intake_schema_hint": """Return JSON with:
 business_type="bakery"
@@ -106,6 +155,42 @@ notes (string)
 """,
     },
 }
+
+
+async def extract_summary(transcript_text: str, business_type: str | None) -> dict:
+    if not transcript_text.strip():
+        return {"summary": None, "sentiment": "unknown"}
+
+    prompt = f"""Analyze this Hinglish phone call transcript (Hindi + English mix).
+Return ONLY valid JSON with:
+- "summary": 2-3 sentences in English describing what the caller wanted, what info was collected, and the outcome
+- "sentiment": one of "positive", "neutral", "negative"
+
+Business type: {business_type or "unknown"}
+Transcript: {transcript_text}
+"""
+
+    def _run():
+        client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+        resp = client.chat.completions.create(
+            model=os.getenv("GROQ_SUMMARY_MODEL") or "llama-3.3-70b-versatile",
+            messages=[
+                {"role": "system", "content": "You output strict JSON only."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0.2,
+            max_tokens=200,
+            response_format={"type": "json_object"},
+        )
+        content = (resp.choices[0].message.content or "").strip()
+        return json.loads(content)
+
+    try:
+        import asyncio
+        return await asyncio.to_thread(_run)
+    except Exception as e:
+        logger.warning(f"Summary extraction failed: {e}")
+        return {"summary": None, "sentiment": "unknown"}
 
 
 async def extract_intake(business_type: str | None, transcript_text: str) -> dict | None:
@@ -142,8 +227,6 @@ Transcript:
         return json.loads(content)
 
     try:
-        import asyncio
-
         return await asyncio.to_thread(_run)
     except Exception as e:
         logger.warning(f"Intake extraction failed: {e}")
@@ -235,9 +318,17 @@ async def save_call(
 
     transcript = tracker if isinstance(tracker, list) else []
     transcript_text = " ".join([(t.get("text") or "").strip() for t in transcript if isinstance(t, dict)]).strip()
+    ai_turns = [t.get("text", "").strip() for t in transcript if isinstance(t, dict) and t.get("role") == "assistant" and (t.get("text") or "").strip()]
+    user_turns = [t.get("text", "").strip() for t in transcript if isinstance(t, dict) and t.get("role") == "user" and (t.get("text") or "").strip()]
 
-    intake = await extract_intake(business_type, transcript_text)
+    intake, summary_data = await asyncio.gather(
+        extract_intake(business_type, transcript_text),
+        extract_summary(transcript_text, business_type),
+    )
     lead_score = compute_lead_score(intake)
+    summary_text = summary_data.get("summary") or ("No transcript captured." if not transcript_text else None)
+    sentiment = summary_data.get("sentiment") or "unknown"
+    follow_up_action = "callback_required" if not user_turns else None
 
     payload = {
         "filename": file.name,
@@ -251,15 +342,11 @@ async def save_call(
         "transcript_text": transcript_text,
         "intake": intake,
         "summary": {
-            "caller_name": None,
-            "interest": None,
-            "budget_range": None,
-            "timeline": None,
-            "source": None,
+            "caller_name": intake.get("patient_name") or intake.get("customer_name") if isinstance(intake, dict) else None,
             "lead_score": lead_score,
-            "sentiment": None,
-            "summary": None,
-            "follow_up_action": None,
+            "sentiment": sentiment,
+            "summary": summary_text,
+            "follow_up_action": follow_up_action,
         },
     }
 
@@ -294,7 +381,10 @@ async def run_bot(
     # -------- SERVICES -------- #
     stt = GroqSTTService(
         api_key=os.getenv("GROQ_API_KEY"),
-        settings=GroqSTTService.Settings(model=FAST_STT_MODEL),
+        settings=GroqSTTService.Settings(
+            model=FAST_STT_MODEL,
+            prompt="Hinglish conversation mixing Hindi and English. Hindi words spoken in Roman script. Names, phone numbers, dates may be in Hindi or English.",
+        ),
     )
 
     llm = GroqLLMService(
@@ -317,17 +407,32 @@ async def run_bot(
 
     # Prefer ElevenLabs when configured, unless explicitly overridden.
     provider = tts_provider or ("elevenlabs" if elevenlabs_api_key else "cartesia")
+    _elevenlabs_session = None
     if provider == "elevenlabs":
         if not elevenlabs_api_key:
             raise RuntimeError("TTS_PROVIDER=elevenlabs but ELEVENLABS_API_KEY is missing")
         if not elevenlabs_voice_id:
             raise RuntimeError("TTS_PROVIDER=elevenlabs but ELEVENLABS_VOICE_ID is missing")
-        tts = ElevenLabsTTSService(
-            api_key=elevenlabs_api_key,
-            voice_id=elevenlabs_voice_id,
-            model=elevenlabs_model,
-            sample_rate=8000,  # Must match Twilio's 8000 Hz
-        )
+        elevenlabs_sample_rate = int(os.getenv("ELEVENLABS_SAMPLE_RATE") or "16000")
+        use_http = os.getenv("ELEVENLABS_USE_HTTP", "").strip() in ("1", "true", "yes")
+        if use_http:
+            _elevenlabs_session = aiohttp.ClientSession()
+            tts = ElevenLabsHttpTTSService(
+                api_key=elevenlabs_api_key,
+                voice_id=elevenlabs_voice_id,
+                model=elevenlabs_model,
+                aiohttp_session=_elevenlabs_session,
+                sample_rate=elevenlabs_sample_rate,
+                aggregate_sentences=True,
+            )
+        else:
+            tts = ElevenLabsTTSService(
+                api_key=elevenlabs_api_key,
+                voice_id=elevenlabs_voice_id,
+                model=elevenlabs_model,
+                sample_rate=elevenlabs_sample_rate,
+                aggregate_sentences=True,
+            )
 
     # -------- PROMPT -------- #
     bt = (business_type or "").strip().lower()
@@ -349,7 +454,12 @@ async def run_bot(
             vad_analyzer=SileroVADAnalyzer(
                 sample_rate=8000,
                 # Lower stop threshold reduces dead-air before the bot responds.
-                params=VADParams(stop_secs=USER_SPEECH_STOP_SECS),
+                params=VADParams(
+                    start_secs=USER_SPEECH_START_SECS,
+                    stop_secs=USER_SPEECH_STOP_SECS,
+                    min_volume=USER_SPEECH_MIN_VOLUME,
+                    confidence=USER_SPEECH_CONFIDENCE,
+                ),
             ),
             user_turn_strategies=UserTurnStrategies(
                 start=default_user_turn_start_strategies(),
@@ -411,4 +521,8 @@ async def run_bot(
         await task.queue_frames([EndFrame()])
 
     runner = PipelineRunner()
-    await runner.run(task)
+    try:
+        await runner.run(task)
+    finally:
+        if _elevenlabs_session:
+            await _elevenlabs_session.close()

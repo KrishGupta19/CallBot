@@ -1,0 +1,86 @@
+{
+  "filename": "call_210716.json",
+  "call_sid": "CA0f8b89e2e166da499dcd6046a9235845",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-24T21:05:41.834059",
+  "call_end": "2026-04-24T21:07:16.006430",
+  "duration_seconds": 94,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon?"
+    },
+    {
+      "role": "user",
+      "text": "Mujhe doctor ka appointment dinda hai."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, note kar liya. Aapka naam kitna hain, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "Myra nám týsku ptá."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, Myra némeín hain. Kya aapka koi contact number hota hai jahaan se main aapko call kar sakoon, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "My contact number is 98711-34157."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, note kar liya. Aap Dr. Sharma ne kab se pehle apne clinic mein aaye the?"
+    },
+    {
+      "role": "user",
+      "text": "Hindi words, words, dates may be in Hindi or English."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, dhanyavaad. Aap kya, ek nayi patient hain ya aapko pehle se hi Dr. Sharma ka meeting hua hua kartatha, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "Name me meeting book for a karateka."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, samajh gayi. Aap karateka hain aur aapke some ki wajah se aapke saamne kya samasyaen ya problem aayein hain, Ji?"
+    },
+    {
+      "role": "user",
+      "text": "implication of"
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, kuch samasyaen ya lakshan hain yah kehne ke liye ke aapke haath, paayo, ya kisi anya hisse mein kabhi kabhi sharshan, dard, ya lambaai lagta hain. Kya yeh sahi hota hai."
+    }
+  ],
+  "transcript_text": "Namaste, Dr. Sharma's clinic mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon? Mujhe doctor ka appointment dinda hai. Ji, note kar liya. Aapka naam kitna hain, Ji? Myra nám týsku ptá. Ji, Myra némeín hain. Kya aapka koi contact number hota hai jahaan se main aapko call kar sakoon, Ji? My contact number is 98711-34157. Ji, note kar liya. Aap Dr. Sharma ne kab se pehle apne clinic mein aaye the? Hindi words, words, dates may be in Hindi or English. Ji, dhanyavaad. Aap kya, ek nayi patient hain ya aapko pehle se hi Dr. Sharma ka meeting hua hua kartatha, Ji? Name me meeting book for a karateka. Ji, samajh gayi. Aap karateka hain aur aapke some ki wajah se aapke saamne kya samasyaen ya problem aayein hain, Ji? implication of Ji, kuch samasyaen ya lakshan hain yah kehne ke liye ke aapke haath, paayo, ya kisi anya hisse mein kabhi kabhi sharshan, dard, ya lambaai lagta hain. Kya yeh sahi hota hai.",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "booked",
+    "patient_name": "Myra",
+    "phone_number": "98711-34157",
+    "is_new_patient": true,
+    "reason_for_visit": "sharshan, dard, ya lambaai in haath, paayo, ya kisi anya hisse",
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": "Dr. Sharma",
+    "notes": "Patient is a karateka, experiencing sharshan, dard, ya lambaai in haath, paayo, ya kisi anya hisse"
+  },
+  "summary": {
+    "caller_name": "Myra",
+    "lead_score": 10,
+    "sentiment": "neutral",
+    "summary": "The caller contacted Dr. Sharma's clinic to book an appointment. The caller provided their name, Myra, and contact number, 98711-34157, and mentioned they are a karateka. The clinic staff collected this information and inquired about the caller's previous visits and any health issues they are experiencing.",
+    "follow_up_action": null
+  },
+  "recording_sid": "RE5de2313fb1f9ceb5839135407169499c",
+  "recording_url": "/recordings/RE5de2313fb1f9ceb5839135407169499c.mp3",
+  "recording_status": "completed"
+}

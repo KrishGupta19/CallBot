@@ -1,0 +1,68 @@
+{
+  "filename": "call_203923.json",
+  "call_sid": "CA51d58d481802121af7ca0b290fe396dc",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-24T20:38:30.925885",
+  "call_end": "2026-04-24T20:39:23.128103",
+  "duration_seconds": 52,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste! Royal Bakery mein aapka swagat hai. Aaj hum aapke liye kya serve kar sakte hain?\n\nKya aapke naam hai, jis tarah se hum aapke naam se apne order ko track kar sakte hain?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Kish."
+    },
+    {
+      "role": "assistant",
+      "text": "Kish ji, aapka swagat hai Royal Bakery mein. Aapne kabhi humare bakery se kuch kharida hai?"
+    },
+    {
+      "role": "user",
+      "text": "Can I talk in English, please?"
+    },
+    {
+      "role": "assistant",
+      "text": "Bilkul, Mr. Kish! English mein baat karein toh aap bhi acchi samjhenge. Ab, aapne kuch special order karna hai ya aapke liye hum kya service kar sakte hain?"
+    },
+    {
+      "role": "user",
+      "text": "He's talking English."
+    },
+    {
+      "role": "assistant",
+      "text": "Thank you for letting me know, Kish! Now, how can we assist you today? Are you looking to place an order or inquire about something?"
+    }
+  ],
+  "transcript_text": "Namaste! Royal Bakery mein aapka swagat hai. Aaj hum aapke liye kya serve kar sakte hain?\n\nKya aapke naam hai, jis tarah se hum aapke naam se apne order ko track kar sakte hain? My name is Kish. Kish ji, aapka swagat hai Royal Bakery mein. Aapne kabhi humare bakery se kuch kharida hai? Can I talk in English, please? Bilkul, Mr. Kish! English mein baat karein toh aap bhi acchi samjhenge. Ab, aapne kuch special order karna hai ya aapke liye hum kya service kar sakte hain? He's talking English. Thank you for letting me know, Kish! Now, how can we assist you today? Are you looking to place an order or inquire about something?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "customer_name": "Kish",
+    "phone_number": null,
+    "items": null,
+    "quantity": null,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer introduced himself and was asked how the bakery could assist him, but no order details were discussed yet."
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": "Namaste! Royal Bakery mein aapka swagat hai. Aaj hum aapke liye kya serve kar sakte hain?\n\nKya aapke naam hai, jis tarah se hum aapke naam se apne order ko track kar sakte hain? Kish ji, aapka swagat hai Royal Bakery mein. Aapne kabhi humare bakery se kuch kharida hai?",
+    "follow_up_action": null
+  },
+  "recording_sid": "RE35db5da81ea6d35777f7d493e5560a26",
+  "recording_url": "/recordings/RE35db5da81ea6d35777f7d493e5560a26.mp3",
+  "recording_status": "completed"
+}

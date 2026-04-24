@@ -1,0 +1,76 @@
+{
+  "filename": "call_205824.json",
+  "call_sid": "CAea2887dee4366b8d6d03e3631b3d8cb3",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-24T20:56:58.901233",
+  "call_end": "2026-04-24T20:58:24.029859",
+  "duration_seconds": 85,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste! Royal Bakery mein aapka swagat hai. Aaj hum aapke liye kya serve kar sakte hain?\n\nAapka naam kya hai, please bataiye."
+    },
+    {
+      "role": "user",
+      "text": "I mean, I'm..."
+    },
+    {
+      "role": "user",
+      "text": "My name is Chris Gupta."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, Chris Bhai! Aapka naam hai Chris Gupta, correct kya? Ab aap humari khushboo bhari bakery se kya chaahte hain? Koi cake, bakery item, ya cookie?"
+    },
+    {
+      "role": "user",
+      "text": "I want to give a kick to you."
+    },
+    {
+      "role": "assistant",
+      "text": "Hahaha, Chris Bhai, aapke saath joke karne ki koshish hai! Lekin seriously, aap kya khane ki icha kar rahe hain? Cake, pastries, cookies, ya koi anya bakery item?"
+    },
+    {
+      "role": "user",
+      "text": "Hello."
+    },
+    {
+      "role": "assistant",
+      "text": "Namaste, Chris Bhai! Aap hamesha khush karte rahein. Ab aap humari bakery se koi item order karne ke liye tayyar hain? Toh please bataiye, aapne kuch special aur yadgar karna chaahte hain to hum uske liye taiyar hain."
+    },
+    {
+      "role": "user",
+      "text": "I need cake. I need strawberry cake."
+    },
+    {
+      "role": "assistant",
+      "text": "Chris Bhai, strawberry cake kuch sabse accha hoga! Aapke liye hum ek sabse zayda strawberry cake tayyar karenge, jisei aapke saath share karte hain. Strawberry cake ke saath aap kai quantity kuch chaahte hain? Ek, do ya koi aur quantity?"
+    }
+  ],
+  "transcript_text": "Namaste! Royal Bakery mein aapka swagat hai. Aaj hum aapke liye kya serve kar sakte hain?\n\nAapka naam kya hai, please bataiye. I mean, I'm... My name is Chris Gupta. Namaste, Chris Bhai! Aapka naam hai Chris Gupta, correct kya? Ab aap humari khushboo bhari bakery se kya chaahte hain? Koi cake, bakery item, ya cookie? I want to give a kick to you. Hahaha, Chris Bhai, aapke saath joke karne ki koshish hai! Lekin seriously, aap kya khane ki icha kar rahe hain? Cake, pastries, cookies, ya koi anya bakery item? Hello. Namaste, Chris Bhai! Aap hamesha khush karte rahein. Ab aap humari bakery se koi item order karne ke liye tayyar hain? Toh please bataiye, aapne kuch special aur yadgar karna chaahte hain to hum uske liye taiyar hain. I need cake. I need strawberry cake. Chris Bhai, strawberry cake kuch sabse accha hoga! Aapke liye hum ek sabse zayda strawberry cake tayyar karenge, jisei aapke saath share karte hain. Strawberry cake ke saath aap kai quantity kuch chaahte hain? Ek, do ya koi aur quantity?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "customer_name": "Chris Gupta",
+    "phone_number": null,
+    "items": "strawberry cake",
+    "quantity": null,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer inquired about ordering a strawberry cake, but details such as quantity, pickup or delivery, and other specifics were not confirmed in the provided transcript."
+  },
+  "summary": {
+    "caller_name": "Chris Gupta",
+    "lead_score": 1,
+    "sentiment": "positive",
+    "summary": "The caller, Chris Gupta, contacted Royal Bakery to place an order. The bakery representative collected information about the caller's preferences and offered assistance. The caller requested a strawberry cake and the representative agreed to prepare it.",
+    "follow_up_action": null
+  },
+  "recording_sid": "REeeab625d9ba2fefff9f51fc7d542f848",
+  "recording_url": "/recordings/REeeab625d9ba2fefff9f51fc7d542f848.mp3",
+  "recording_status": "completed"
+}

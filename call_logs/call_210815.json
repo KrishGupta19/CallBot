@@ -1,0 +1,56 @@
+{
+  "filename": "call_210815.json",
+  "call_sid": "CAdcf4f708c19641366ef30a769a51d63c",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-24T21:07:29.364646",
+  "call_end": "2026-04-24T21:08:15.820169",
+  "duration_seconds": 46,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste, The Royal Bakery mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon?\n\n(Please respond as the customer)"
+    },
+    {
+      "role": "user",
+      "text": "So I would reach it to you."
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, aapka message sun liya. Main aapki order sunne ke liye taiyar hoon. Aapka naam kitna hai ji?"
+    },
+    {
+      "role": "user",
+      "text": "MEDE NAMM KRISTGUP SE"
+    },
+    {
+      "role": "assistant",
+      "text": "Ji, note kar liya. Kriti Gupta Ji, aapka naam abhivyakt hai. Ab, main aapki khatm ho rahi hoon. Aapka phone number kitna hai ji?"
+    }
+  ],
+  "transcript_text": "Namaste, The Royal Bakery mein aapka swagat hai. Main aapki kaise sahayata kar sakti hoon?\n\n(Please respond as the customer) So I would reach it to you. Ji, aapka message sun liya. Main aapki order sunne ke liye taiyar hoon. Aapka naam kitna hai ji? MEDE NAMM KRISTGUP SE Ji, note kar liya. Kriti Gupta Ji, aapka naam abhivyakt hai. Ab, main aapki khatm ho rahi hoon. Aapka phone number kitna hai ji?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "unknown",
+    "customer_name": "Kriti Gupta",
+    "phone_number": null,
+    "items": null,
+    "quantity": null,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer introduced herself, waiting for phone number and order details"
+  },
+  "summary": {
+    "caller_name": "Kriti Gupta",
+    "lead_score": 1,
+    "sentiment": "neutral",
+    "summary": "The caller, Kriti Gupta, contacted The Royal Bakery and was greeted by a representative who offered assistance. The representative collected the caller's name and prepared to take their order. The conversation is ongoing, with the representative requesting the caller's phone number.",
+    "follow_up_action": null
+  },
+  "recording_sid": "REa73aec390d34f5f816abee150cbb4743",
+  "recording_url": "/recordings/REa73aec390d34f5f816abee150cbb4743.mp3",
+  "recording_status": "completed"
+}

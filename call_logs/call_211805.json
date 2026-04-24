@@ -1,0 +1,108 @@
+{
+  "filename": "call_211805.json",
+  "call_sid": "CAf938ebdeb3a26f470d8cac17119d8dc9",
+  "caller_number": "+12184268938",
+  "business_type": "bakery",
+  "call_start": "2026-04-24T21:15:49.982239",
+  "call_end": "2026-04-24T21:18:05.282125",
+  "duration_seconds": 135,
+  "transcript": [
+    {
+      "role": "assistant",
+      "text": "Namaste! The Royal Bakery mein aapka swagat hai.\nKya aap Hindi mein baat karna chahenge ya English mein?"
+    },
+    {
+      "role": "user",
+      "text": "English."
+    },
+    {
+      "role": "assistant",
+      "text": "Welcome to The Royal Bakery. Would you like to place an order or check our menu first?\n\n---\n\n(Note: As you have chosen English, I will conduct the rest of the call in the English language.)"
+    },
+    {
+      "role": "user",
+      "text": "I would like to place an order."
+    },
+    {
+      "role": "assistant",
+      "text": "Can you please tell me your full name, Sir or Ma'am?"
+    },
+    {
+      "role": "user",
+      "text": "My name is Kresh Gupta."
+    },
+    {
+      "role": "assistant",
+      "text": "Noted, thank you. Now, could you please provide your contact phone number so we can reach you for any further questions or confirmations?"
+    },
+    {
+      "role": "user",
+      "text": "My number is 83684-936."
+    },
+    {
+      "role": "user",
+      "text": "9, 3, 1, 2, 8."
+    },
+    {
+      "role": "assistant",
+      "text": "Noted, thank you. It's been confirmed that your phone number is 83684-9361. Moving on, what items would you like to order from The Royal Bakery today, Mr. Gupta?"
+    },
+    {
+      "role": "user",
+      "text": "I want to order strawberry cake."
+    },
+    {
+      "role": "assistant",
+      "text": "One strawberry cake has been noted in your order. What would you like to know about the size options and flavors for the cake, Mr. Gupta?"
+    },
+    {
+      "role": "user",
+      "text": "So I will take a regular size cake."
+    },
+    {
+      "role": "assistant",
+      "text": "A regular-size strawberry cake is what you've chosen. For the quantity, I assume you'd like to order one cake, is that correct, Mr. Gupta?"
+    },
+    {
+      "role": "user",
+      "text": "Yes."
+    },
+    {
+      "role": "assistant",
+      "text": "Noted, thank you. Would you like to pick up the cake from our bakery or have it delivered, Mr. Gupta?"
+    },
+    {
+      "role": "user",
+      "text": "Hello."
+    },
+    {
+      "role": "assistant",
+      "text": "No issue, I'll assume you didn't answer my previous question. I'll ask again: Would you like to pick up the cake from our bakery or have it delivered, Mr. Gupta?"
+    }
+  ],
+  "transcript_text": "Namaste! The Royal Bakery mein aapka swagat hai.\nKya aap Hindi mein baat karna chahenge ya English mein? English. Welcome to The Royal Bakery. Would you like to place an order or check our menu first?\n\n---\n\n(Note: As you have chosen English, I will conduct the rest of the call in the English language.) I would like to place an order. Can you please tell me your full name, Sir or Ma'am? My name is Kresh Gupta. Noted, thank you. Now, could you please provide your contact phone number so we can reach you for any further questions or confirmations? My number is 83684-936. 9, 3, 1, 2, 8. Noted, thank you. It's been confirmed that your phone number is 83684-9361. Moving on, what items would you like to order from The Royal Bakery today, Mr. Gupta? I want to order strawberry cake. One strawberry cake has been noted in your order. What would you like to know about the size options and flavors for the cake, Mr. Gupta? So I will take a regular size cake. A regular-size strawberry cake is what you've chosen. For the quantity, I assume you'd like to order one cake, is that correct, Mr. Gupta? Yes. Noted, thank you. Would you like to pick up the cake from our bakery or have it delivered, Mr. Gupta? Hello. No issue, I'll assume you didn't answer my previous question. I'll ask again: Would you like to pick up the cake from our bakery or have it delivered, Mr. Gupta?",
+  "intake": {
+    "business_type": "bakery",
+    "outcome": "needs_callback",
+    "customer_name": "Kresh Gupta",
+    "phone_number": "8368493612",
+    "items": "strawberry cake",
+    "quantity": 1,
+    "pickup_or_delivery": null,
+    "desired_date": null,
+    "desired_time": null,
+    "address": null,
+    "special_instructions": null,
+    "notes": "Customer did not respond to pickup or delivery question, further clarification needed"
+  },
+  "summary": {
+    "caller_name": "Kresh Gupta",
+    "lead_score": 4,
+    "sentiment": "neutral",
+    "summary": "The caller, Kresh Gupta, placed an order for a regular-size strawberry cake from The Royal Bakery. The bakery collected his contact information and confirmed the order details. The caller was asked about pickup or delivery but did not respond.",
+    "follow_up_action": null
+  },
+  "recording_sid": "RE99cc9fe011b91bec2a3e8fb595151ca0",
+  "recording_url": "/recordings/RE99cc9fe011b91bec2a3e8fb595151ca0.mp3",
+  "recording_status": "completed"
+}

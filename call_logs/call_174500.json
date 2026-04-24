@@ -1,0 +1,82 @@
+{
+  "filename": "call_174500.json",
+  "call_sid": "CAeb96750e01c2fef1951dd5f30e150c2a",
+  "caller_number": "+12184268938",
+  "business_type": "doctor",
+  "call_start": "2026-04-18T17:44:35.996029",
+  "call_end": "2026-04-18T17:45:00.213470",
+  "duration_seconds": 24,
+  "transcript": [
+    {
+      "role": "user",
+      "text": "Thank you."
+    },
+    {
+      "role": "assistant",
+      "text": "Khushi hai! (you're welcome!) Sir/ma'am, can you please tell me your name?"
+    },
+    {
+      "role": "assistant",
+      "text": "Aapki sunne wali hai madam/sahab. Main clinic receptionist hoon. Kya aap ke liye appointment booking chahiye?"
+    },
+    {
+      "role": "user",
+      "text": "Sir, ma'am, can you please tell me your name?"
+    },
+    {
+      "role": "user",
+      "text": "you know, this was..."
+    },
+    {
+      "role": "assistant",
+      "text": "Haan, please tell mujhe apna naam? (yes, please tell me your name)"
+    },
+    {
+      "role": "user",
+      "text": "Would you have another one? Yes, please."
+    },
+    {
+      "role": "user",
+      "text": "Peace."
+    },
+    {
+      "role": "assistant",
+      "text": "Aap apni naam doosri baar bata sakte hain? (can you please tell me your name again) Kuch loud ho raha hai na, yeh phone connection thoda kamzor hai."
+    },
+    {
+      "role": "user",
+      "text": "Can you tell me your name again?"
+    },
+    {
+      "role": "assistant",
+      "text": "Arre, thodi patience karein! (come on, be patient!) Please tell mujhe apna actual naam."
+    }
+  ],
+  "transcript_text": "Thank you. Khushi hai! (you're welcome!) Sir/ma'am, can you please tell me your name? Aapki sunne wali hai madam/sahab. Main clinic receptionist hoon. Kya aap ke liye appointment booking chahiye? Sir, ma'am, can you please tell me your name? you know, this was... Haan, please tell mujhe apna naam? (yes, please tell me your name) Would you have another one? Yes, please. Peace. Aap apni naam doosri baar bata sakte hain? (can you please tell me your name again) Kuch loud ho raha hai na, yeh phone connection thoda kamzor hai. Can you tell me your name again? Arre, thodi patience karein! (come on, be patient!) Please tell mujhe apna actual naam.",
+  "intake": {
+    "business_type": "doctor",
+    "outcome": "unknown",
+    "patient_name": null,
+    "phone_number": null,
+    "is_new_patient": null,
+    "reason_for_visit": null,
+    "preferred_date": null,
+    "preferred_time": null,
+    "doctor_preference": null,
+    "notes": "The patient's name and other details could not be extracted due to poor phone connection and lack of clear information."
+  },
+  "summary": {
+    "caller_name": null,
+    "interest": null,
+    "budget_range": null,
+    "timeline": null,
+    "source": null,
+    "lead_score": 1,
+    "sentiment": null,
+    "summary": "Khushi hai! (you're welcome!) Sir/ma'am, can you please tell me your name? Aapki sunne wali hai madam/sahab. Main clinic receptionist hoon. Kya aap ke liye appointment booking chahiye?",
+    "follow_up_action": null
+  },
+  "recording_sid": "RE3b614eb9d5f451e82df6a4ee187a3a9e",
+  "recording_url": "/recordings/RE3b614eb9d5f451e82df6a4ee187a3a9e.mp3",
+  "recording_status": "completed"
+}
